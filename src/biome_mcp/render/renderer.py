@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
+from typing import Any
 
 from biome_mcp.models.result import CommandResult, CommandStatus
 from biome_mcp.render.profiles import DEFAULT, RenderProfile
@@ -39,3 +41,35 @@ class PlainTextRenderer:
             return text
         suffix = self._profile.truncation_suffix
         return text[: limit - len(suffix)] + suffix
+
+    def project_fields(self, text: str, fields: Iterable[str] | None) -> str:
+        """Keep only the given top-level fields of a JSON-rendered text blob.
+
+        `fields=None` or non-JSON `text` is a no-op passthrough.
+        """
+        if fields is None:
+            return text
+        obj = self._try_parse_json(text)
+        if not isinstance(obj, dict):
+            return text
+        keep = set(fields)
+        projected = {k: v for k, v in obj.items() if k in keep}
+        return json.dumps(projected, default=str, ensure_ascii=False)
+
+    def strip_defaults(self, text: str, defaults: frozenset[str]) -> str:
+        """Drop top-level fields named in `defaults` from a JSON-rendered text blob.
+
+        Non-JSON `text` is a no-op passthrough.
+        """
+        obj = self._try_parse_json(text)
+        if not isinstance(obj, dict):
+            return text
+        stripped = {k: v for k, v in obj.items() if k not in defaults}
+        return json.dumps(stripped, default=str, ensure_ascii=False)
+
+    @staticmethod
+    def _try_parse_json(text: str) -> Any:
+        try:
+            return json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            return None

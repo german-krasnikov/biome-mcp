@@ -1,5 +1,7 @@
 """Stage 3: PlainTextRenderer tests."""
 
+import json
+
 from biome_mcp.models.result import CommandResult
 from biome_mcp.render.profiles import COMPACT, RenderProfile
 from biome_mcp.render.renderer import PlainTextRenderer
@@ -47,3 +49,39 @@ def test_render_batch():
     assert "one" in text
     assert "two" in text
     assert "\n" in text
+
+
+def test_project_fields_keeps_only_listed_keys():
+    text = json.dumps({"a": 1, "b": 2, "c": 3})
+    out = PlainTextRenderer().project_fields(text, ["a", "c"])
+    assert json.loads(out) == {"a": 1, "c": 3}
+
+
+def test_project_fields_none_is_passthrough():
+    text = '{"a": 1}'
+    out = PlainTextRenderer().project_fields(text, None)
+    assert out == text
+
+
+def test_project_fields_non_json_is_passthrough():
+    text = "plain text, not json"
+    out = PlainTextRenderer().project_fields(text, ["a"])
+    assert out == text
+
+
+def test_strip_defaults_removes_listed_keys():
+    text = json.dumps({"a": 1, "b": 2})
+    out = PlainTextRenderer().strip_defaults(text, frozenset({"b"}))
+    assert json.loads(out) == {"a": 1}
+
+
+def test_strip_defaults_no_match_keeps_all():
+    text = json.dumps({"a": 1})
+    out = PlainTextRenderer().strip_defaults(text, frozenset({"z"}))
+    assert json.loads(out) == {"a": 1}
+
+
+def test_strip_defaults_non_json_is_passthrough():
+    text = "plain text, not json"
+    out = PlainTextRenderer().strip_defaults(text, frozenset({"a"}))
+    assert out == text
