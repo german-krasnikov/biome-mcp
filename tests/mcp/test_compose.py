@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from mcp.server.mcpserver.exceptions import ToolError
 
 from biome_mcp.mcp.compose import (
     CompactMCP,
@@ -12,7 +13,6 @@ from biome_mcp.mcp.compose import (
     inject_extras,
     strip_titles,
 )
-from mcp.server.mcpserver.exceptions import ToolError
 
 
 def test_strip_titles():
