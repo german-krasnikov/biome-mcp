@@ -31,3 +31,4 @@ class CommandDescriptor:
     effect: CommandEffect = CommandEffect.READ
     batchable: bool = True
     requires: frozenset[str] = frozenset()
+    blast_radius: int = 0

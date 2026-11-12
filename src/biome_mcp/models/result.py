@@ -39,3 +39,12 @@ class CommandResult:
     @classmethod
     def timed_out(cls, text: str = "") -> CommandResult:
         return cls(status=CommandStatus.TIMED_OUT, text=text)
+
+    @classmethod
+    def from_raw(cls, raw: dict[str, Any]) -> CommandResult:
+        """Create from a generic {ok, data, err} raw dict response."""
+        if raw.get("ok"):
+            data = raw.get("data", "")
+            text = data if isinstance(data, str) else str(data)
+            return cls.ok(text, data=data)
+        return cls.error("E_RAW", raw.get("err") or "unknown")

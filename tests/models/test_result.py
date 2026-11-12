@@ -42,3 +42,36 @@ def test_result_factory_timed_out():
     r = CommandResult.timed_out("took too long")
     assert r.status is CommandStatus.TIMED_OUT
     assert r.text == "took too long"
+
+
+def test_result_from_raw_ok_with_string_data():
+    r = CommandResult.from_raw({"ok": True, "data": "hierarchy text"})
+    assert r.status is CommandStatus.OK
+    assert r.text == "hierarchy text"
+    assert r.data == "hierarchy text"
+
+
+def test_result_from_raw_ok_with_structured_data():
+    r = CommandResult.from_raw({"ok": True, "data": {"count": 3}})
+    assert r.status is CommandStatus.OK
+    assert r.data == {"count": 3}
+
+
+def test_result_from_raw_ok_missing_data_defaults_empty():
+    r = CommandResult.from_raw({"ok": True})
+    assert r.status is CommandStatus.OK
+    assert r.text == ""
+    assert r.data == ""
+
+
+def test_result_from_raw_error_carries_message():
+    r = CommandResult.from_raw({"ok": False, "err": "connection lost"})
+    assert r.status is CommandStatus.FAILED
+    assert r.text == "connection lost"
+    assert r.error_code == "E_RAW"
+
+
+def test_result_from_raw_error_missing_err_defaults_unknown():
+    r = CommandResult.from_raw({"ok": False})
+    assert r.status is CommandStatus.FAILED
+    assert r.text == "unknown"

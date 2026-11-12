@@ -34,3 +34,19 @@ def test_descriptor_batchable_default_true():
     assert d.batchable is True
     assert d.effect is CommandEffect.READ
     assert d.requires == frozenset()
+
+
+def test_descriptor_blast_radius_default_zero():
+    d = CommandDescriptor(
+        name="scene.inspect", namespace="scene", summary="Inspect",
+        params=(),
+    )
+    assert d.blast_radius == 0
+
+
+def test_descriptor_blast_radius_explicit():
+    d = CommandDescriptor(
+        name="scene.delete_all", namespace="scene", summary="Delete all",
+        params=(), blast_radius=5,
+    )
+    assert d.blast_radius == 5
