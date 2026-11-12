@@ -1,0 +1,10 @@
+EXAMPLES isNewer
+  id | verParsed | verCandPre | verCurPre | verTriple -> expected
+  equal_stable | true | false | false | equal -> false
+  higher_stable | true | false | false | greater -> true
+  lower_stable | true | false | false | less -> false
+  rc_over_stable | true | true | false | greater -> false
+  release_over_rc | true | false | true | equal -> true
+  unparsed | false | false | false | equal -> false
+  higher_rc | true | true | true | greater -> true
+END

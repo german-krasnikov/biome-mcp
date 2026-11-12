@@ -1,0 +1,11 @@
+EXAMPLES chatPermission
+  id | chatMode | callMutating | callDangerous -> expected
+  external_allows | external | false | false -> allow
+  unknown_denies | unknown | false | false -> denyUnknownMode
+  full_access_allows | fullAccess | true | true -> allow
+  agent_safe_allows | agent | false | false -> allow
+  agent_dangerous_denies | agent | false | true -> denyDangerous
+  ask_read_allows | ask | false | false -> allow
+  ask_mutating_denies | ask | true | false -> denyAsk
+  ask_dangerous_denies | ask | false | true -> denyAsk
+END

@@ -1,0 +1,32 @@
+# Plans (session-specific, not tracked)
+Plans/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Coverage
+.coverage
+htmlcov/
+
+# uv
+uv.lock
+
+# Generated (tracked, but not hand-edited)
+# src/biome_mcp/decisions/generated/
+# csharp/Biome.MCP/*.g.cs
+.claude
+CLAUDE.md

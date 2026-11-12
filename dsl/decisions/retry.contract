@@ -1,0 +1,6 @@
+CONTRACT biome.retry
+COVERAGE declared-scope
+FACT retry.errorCode enum=connection_lost,timeout,cancelled,invalid_arguments,permission_denied,command_not_found,internal_error,unknown closed
+FACT retry.attempt number min=0 max=1000000 integer
+FACT retry.maxRetries number min=0 max=1000000 integer
+INPUT retryGate retry.errorCode retry.attempt retry.maxRetries

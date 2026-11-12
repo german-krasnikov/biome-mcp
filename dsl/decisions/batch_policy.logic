@@ -1,0 +1,5 @@
+# Batch error policy: what to do when a command in a batch fails.
+DECISION batchPolicy DEFAULT stop
+  readTransient AT 10 WHEN cmd.effect == read AND error.class == transient -> continue
+  rollbackAvailable AT 20 WHEN batch.supportsRollback == true AND error.class == permanent -> rollback
+END

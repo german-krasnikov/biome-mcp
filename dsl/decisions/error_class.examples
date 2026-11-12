@@ -1,0 +1,11 @@
+EXAMPLES errorClass
+  id | errorCode -> expected
+  connection_lost_transient | connection_lost -> transient
+  timeout_transient | timeout -> transient
+  invalid_args_permanent | invalid_arguments -> permanent
+  permission_denied_permanent | permission_denied -> permanent
+  command_not_found_permanent | command_not_found -> permanent
+  internal_error_unknown | internal_error -> unknown
+  cancelled_unknown | cancelled -> unknown
+  unknown_unknown | unknown -> unknown
+END

@@ -1,0 +1,7 @@
+# Semver comparison: is the candidate newer than the current version?
+DECISION isNewer DEFAULT false
+  unparsed AT 5 WHEN NOT ver.parsed -> false
+  stableUserNeverSeesRc AT 10 WHEN ver.candPre AND NOT ver.curPre -> false
+  higher AT 20 WHEN ver.triple == greater -> true
+  releaseOverItsRc AT 30 WHEN ver.triple == equal AND ver.curPre AND NOT ver.candPre -> true
+END

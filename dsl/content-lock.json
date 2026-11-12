@@ -1,0 +1,30 @@
+{
+  "generated": "by scripts/dsl_content_lock.py generate; do not edit",
+  "files": {
+    "dsl/biome.project": "3cdd348d3eb00efa9910d4888058ad4318775bbec586fc557ab998ae7de509fa",
+    "dsl/decisions/batch_policy.contract": "b88d4bde2a1197ea698b69824c86b383290abff8a847601305109502d9862afb",
+    "dsl/decisions/batch_policy.examples": "358e1c7389ba6dbe0bb7a24413b4487e4e5ba45c3c1b5a39476c073ce759a4ba",
+    "dsl/decisions/batch_policy.logic": "295d15e0449532b2ed8f5bdea2e2031d5645ea7638021fa893e5ad32e6e17813",
+    "dsl/decisions/error_class.contract": "d850b82945b6a6a3bf30905975e5b2339a8678f62f3884e5b92c022420d33304",
+    "dsl/decisions/error_class.examples": "2e8b182043c464eb4e9b5f95f7ac5bfda5d1962b0cb69675aa5e84ad5fbddceb",
+    "dsl/decisions/error_class.logic": "19b8bddf09109092f7c5147c3a86e1015aad7831fa127ae058f04b7ef71099cc",
+    "dsl/decisions/mutability.contract": "df999b437b33d6716dbe48828501c55c2398195a9bc4817038723f88ff4a6093",
+    "dsl/decisions/mutability.examples": "de2fd6a41836f141db2818b39cf538615761f86960bc4df1d9ae5bac0b52e94e",
+    "dsl/decisions/mutability.logic": "2b7a9bc5862c5a4e0ea7b11099dc98a2455f1f565e05a23347f6d7160aa07e0e",
+    "dsl/decisions/permission.contract": "b22f6de5782dab06daf9f72300af26ec07c0d69df22c8a9078b9b113b8d49b7c",
+    "dsl/decisions/permission.examples": "47395bcee2e139eaf6c1a76e2602aa1ec0dffd93224c9dc61eb514997c342bc4",
+    "dsl/decisions/permission.logic": "202cf751e3fa8e664a43d6570f2af832dff4a6cc4e137a0f7a9c04c2195e44b6",
+    "dsl/decisions/retry.contract": "7afc9e9c75d19a76eef8ed2c55c04b5b12637cb4d9d071082b1e691e3da4f629",
+    "dsl/decisions/retry.examples": "65d687f2800f478d9c98ebaea6397f08fdecb2ab893cc11eff6874a3639d7cbd",
+    "dsl/decisions/retry.logic": "6a71caf58068cd5540accd118a672a0e7209be17e2ff3eb07f3b7a9c596e2b14",
+    "dsl/decisions/versionorder.contract": "564009b1e09b7195e0a5a0a15df8bf56e0fecbd3f93c97e226eed78c5f9ee09f",
+    "dsl/decisions/versionorder.examples": "a65c54c221dd6ffbcbab4262402f5df684199cdfe6dac2cc0f2539be58053ad9",
+    "dsl/decisions/versionorder.logic": "2ff49c8d1131a8319ab430d7a9c351414d47cc87e9fd5a5bb09c668423840c86",
+    "src/biome_mcp/decisions/generated/batch_policy.py": "8499837eb06fcf83817020a63c84025262ba7e80477ae98295b4000ac0cf92c5",
+    "src/biome_mcp/decisions/generated/error_class.py": "bf82ab82a769a4353a751f02ef94b19b9ab69eacb0d8fbd1aa968980e6c69646",
+    "src/biome_mcp/decisions/generated/mutability.py": "2a47da51e58de84ef99adca80549f6688765627f07751e6eba52c6067076bcd2",
+    "src/biome_mcp/decisions/generated/permission.py": "7278727556cc3263a6cf8a6932db273467d412d81f494f7b91807d36d482f8f8",
+    "src/biome_mcp/decisions/generated/retry.py": "5f6c0f17720cd3f89638b42ee414d36fe78c7b197f3c6023d4ae957480109ed4",
+    "src/biome_mcp/decisions/generated/versionorder.py": "17e664f89cca881970a0043c25d97114e82f020289f83a822dd60351834c7021"
+  }
+}

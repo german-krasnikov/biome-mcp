@@ -1,0 +1,5 @@
+# Engine-agnostic mutability: decides based on declared command effect.
+# Engine adapters (Unity, Browser) override with richer rules in their own .logic.
+DECISION isMutating DEFAULT true
+  readEffect AT 10 WHEN cmd.effect == read -> false
+END

@@ -1,0 +1,9 @@
+EXAMPLES batchPolicy
+  id | cmdEffect | errorClass | batchSupportsRollback -> expected
+  read_transient_continues | read | transient | false -> continue
+  write_permanent_stops | write | permanent | false -> stop
+  write_transient_stops | write | transient | false -> stop
+  read_permanent_stops | read | permanent | false -> stop
+  rollback_on_permanent | write | permanent | true -> rollback
+  read_unknown_stops | read | unknown | false -> stop
+END

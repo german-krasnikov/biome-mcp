@@ -1,0 +1,4 @@
+CONTRACT biome.error_class
+COVERAGE declared-scope
+FACT error.code enum=connection_lost,command_not_found,invalid_arguments,timeout,permission_denied,internal_error,cancelled,unknown closed
+INPUT errorClass error.code

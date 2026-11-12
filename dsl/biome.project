@@ -1,0 +1,14 @@
+PROJECT biome-mcp
+VERSION 0.1.0
+
+GENERATE python src/biome_mcp/decisions/generated/
+GENERATE csharp (future)
+
+DECISIONS
+  decisions/mutability.logic
+  decisions/retry.logic
+  decisions/batch_policy.logic
+  decisions/error_class.logic
+  decisions/permission.logic
+  decisions/versionorder.logic
+END

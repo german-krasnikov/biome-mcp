@@ -1,0 +1,4 @@
+CONTRACT biome.mutability
+COVERAGE declared-scope
+FACT cmd.effect enum=read,write,idempotent_write closed
+INPUT isMutating cmd.effect

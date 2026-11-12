@@ -1,0 +1,8 @@
+# Error classification: transient (worth retrying) vs permanent vs unknown.
+DECISION errorClass DEFAULT unknown
+  connectionLost AT 10 WHEN error.code == connection_lost -> transient
+  timeout AT 20 WHEN error.code == timeout -> transient
+  invalidArgs AT 30 WHEN error.code == invalid_arguments -> permanent
+  permissionDenied AT 40 WHEN error.code == permission_denied -> permanent
+  commandNotFound AT 50 WHEN error.code == command_not_found -> permanent
+END
