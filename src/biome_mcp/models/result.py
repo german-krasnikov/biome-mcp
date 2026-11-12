@@ -35,3 +35,7 @@ class CommandResult:
     @classmethod
     def cancelled(cls, text: str = "") -> CommandResult:
         return cls(status=CommandStatus.CANCELLED, text=text)
+
+    @classmethod
+    def timed_out(cls, text: str = "") -> CommandResult:
+        return cls(status=CommandStatus.TIMED_OUT, text=text)

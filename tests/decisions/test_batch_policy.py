@@ -1,6 +1,12 @@
 """S15-S16: batch_policy decision."""
 
-from biome_mcp.decisions.generated.batch_policy import BatchPolicyInput, batch_policy
+import pytest
+
+from biome_mcp.decisions.generated.batch_policy import (
+    BatchPolicyInput,
+    LogicInputError,
+    batch_policy,
+)
 
 
 def test_batch_policy_read_transient_continues():
@@ -29,3 +35,11 @@ def test_batch_policy_default_is_stop():
         cmd_effect="read", error_class="unknown", batch_supports_rollback=False,
     ))
     assert r == "stop"
+
+
+def test_batch_policy_bad_effect_raises():
+    with pytest.raises(LogicInputError, match="LOGIC_INPUT_CONTRACT"):
+        batch_policy(BatchPolicyInput(
+            cmd_effect="DELETE", error_class="transient",
+            batch_supports_rollback=False,
+        ))

@@ -12,7 +12,7 @@ def test_command_effect_enum_values():
 
 
 def test_param_spec_required_defaults():
-    p = ParamSpec(name="path", type=str)
+    p = ParamSpec(name="path", param_type=str)
     assert p.required is True
     assert p.default is None
 

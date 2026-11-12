@@ -1,5 +1,5 @@
 # Generated from dsl/decisions/permission.logic
-# source-sha256=202cf751e3fa8e664a43d6570f2af832dff4a6cc4e137a0f7a9c04c2195e44b6
+# source-sha256=9fb7f767f75e07216a172c029021a16ebc94e8814710878d1f0f098208e63031
 # Edit the source, then run biome generate.
 
 from __future__ import annotations
@@ -11,31 +11,25 @@ class LogicInputError(ValueError):
     """An input outside the Logic contract (LOGIC_INPUT_CONTRACT)."""
 
 
-class ChatPermissionValues:
-    ALLOW = "allow"
-    DENY_ASK = "denyAsk"
-    DENY_DANGEROUS = "denyDangerous"
-    DENY_UNKNOWN_MODE = "denyUnknownMode"
+class RequiredPermissionValues:
+    READ = "read"
+    WRITE = "write"
 
 
 @dataclass(frozen=True, slots=True)
-class ChatPermissionInput:
-    call_dangerous: bool
-    call_mutating: bool
-    chat_mode: str
+class RequiredPermissionInput:
+    cmd_effect: str
 
 
-def chat_permission(inp: ChatPermissionInput) -> str:
-    _check("call.dangerous", inp.call_dangerous, "bool")
-    _check("call.mutating", inp.call_mutating, "bool")
-    _check("chat.mode", inp.chat_mode, "enum",
-           values=("external", "ask", "agent", "fullAccess", "unknown"))
-    return _decide_chat_permission(inp)
+def required_permission(inp: RequiredPermissionInput) -> str:
+    _check("cmd.effect", inp.cmd_effect, "enum",
+           values=("read", "write", "idempotent_write"))
+    return _decide_required_permission(inp)
 
 
 __all__ = [
-    "LogicInputError", "ChatPermissionValues", "ChatPermissionInput",
-    "chat_permission",
+    "LogicInputError", "RequiredPermissionValues",
+    "RequiredPermissionInput", "required_permission",
 ]
 
 
@@ -43,9 +37,7 @@ def _check(
     fact_id: str, value: object, kind: str, *,
     values: tuple[str, ...] = (),
 ) -> None:
-    if kind == "bool":
-        ok = isinstance(value, bool)
-    elif kind == "enum":
+    if kind == "enum":
         ok = isinstance(value, str) and value in values
     else:
         ok = isinstance(value, str)
@@ -53,22 +45,14 @@ def _check(
         raise LogicInputError(f"LOGIC_INPUT_CONTRACT: {fact_id}={value!r}")
 
 
-def _decide_chat_permission(s: ChatPermissionInput) -> str:
-    # rule: external (priority 10)
-    if s.chat_mode == "external":
-        return "allow"
-    # rule: unknownMode (priority 11)
-    if s.chat_mode == "unknown":
-        return "denyUnknownMode"
-    # rule: fullAccess (priority 12)
-    if s.chat_mode == "fullAccess":
-        return "allow"
-    # rule: agentDangerous (priority 20)
-    if (s.chat_mode == "agent") and (s.call_dangerous is True):
-        return "denyDangerous"
-    # rule: askBlocked (priority 30)
-    if (s.chat_mode == "ask") and (
-        (s.call_mutating is True) or (s.call_dangerous is True)
-    ):
-        return "denyAsk"
-    return "allow"
+def _decide_required_permission(s: RequiredPermissionInput) -> str:
+    # rule: readEffect (priority 10)
+    if s.cmd_effect == "read":
+        return "read"
+    # rule: writeEffect (priority 20)
+    if s.cmd_effect == "write":
+        return "write"
+    # rule: idempotentEffect (priority 25)
+    if s.cmd_effect == "idempotent_write":
+        return "write"
+    return "write"

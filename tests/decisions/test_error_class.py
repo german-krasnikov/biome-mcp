@@ -1,6 +1,12 @@
 """S17-S18: error_class decision."""
 
-from biome_mcp.decisions.generated.error_class import ErrorClassInput, error_class
+import pytest
+
+from biome_mcp.decisions.generated.error_class import (
+    ErrorClassInput,
+    LogicInputError,
+    error_class,
+)
 
 
 def test_error_class_timeout_is_transient():
@@ -21,3 +27,8 @@ def test_error_class_permission_denied_is_permanent():
 
 def test_error_class_internal_is_unknown():
     assert error_class(ErrorClassInput(error_code="internal_error")) == "unknown"
+
+
+def test_error_class_bad_code_raises():
+    with pytest.raises(LogicInputError, match="LOGIC_INPUT_CONTRACT"):
+        error_class(ErrorClassInput(error_code="nonexistent"))

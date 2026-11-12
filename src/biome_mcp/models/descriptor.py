@@ -16,7 +16,7 @@ class CommandEffect(StrEnum):
 @dataclass(frozen=True)
 class ParamSpec:
     name: str
-    type: type
+    param_type: type
     required: bool = True
     default: Any = None
     description: str = ""

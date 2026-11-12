@@ -36,3 +36,9 @@ def test_result_factory_cancelled():
     r = CommandResult.cancelled("user abort")
     assert r.status is CommandStatus.CANCELLED
     assert r.text == "user abort"
+
+
+def test_result_factory_timed_out():
+    r = CommandResult.timed_out("took too long")
+    assert r.status is CommandStatus.TIMED_OUT
+    assert r.text == "took too long"

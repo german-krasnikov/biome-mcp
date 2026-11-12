@@ -1,6 +1,4 @@
 CONTRACT biome.permission
 COVERAGE declared-scope
-FACT chat.mode enum=external,ask,agent,fullAccess,unknown closed
-FACT call.mutating bool
-FACT call.dangerous bool
-INPUT chatPermission chat.mode call.mutating call.dangerous
+FACT cmd.effect enum=read,write,idempotent_write closed
+INPUT requiredPermission cmd.effect

@@ -1,6 +1,8 @@
 """S13-S14: retry decision."""
 
-from biome_mcp.decisions.generated.retry import RetryGateInput, retry_gate
+import pytest
+
+from biome_mcp.decisions.generated.retry import LogicInputError, RetryGateInput, retry_gate
 
 
 def test_retry_connection_lost_is_retryable():
@@ -29,3 +31,10 @@ def test_retry_max_retries_reached():
         retry_error_code="connection_lost", retry_attempt=3, retry_max_retries=3,
     ))
     assert r == "max_retries"
+
+
+def test_retry_bad_error_code_raises():
+    with pytest.raises(LogicInputError, match="LOGIC_INPUT_CONTRACT"):
+        retry_gate(RetryGateInput(
+            retry_error_code="nonexistent", retry_attempt=0, retry_max_retries=3,
+        ))

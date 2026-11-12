@@ -1,6 +1,8 @@
 """Versionorder decision — semver comparison."""
 
-from biome_mcp.decisions.generated.versionorder import IsNewerInput, is_newer
+import pytest
+
+from biome_mcp.decisions.generated.versionorder import IsNewerInput, LogicInputError, is_newer
 
 
 def test_equal_not_newer():
@@ -37,3 +39,10 @@ def test_unparsed_is_not_newer():
     assert is_newer(IsNewerInput(
         ver_parsed=False, ver_cand_pre=False, ver_cur_pre=False, ver_triple="greater",
     )) is False
+
+
+def test_versionorder_bad_triple_raises():
+    with pytest.raises(LogicInputError, match="LOGIC_INPUT_CONTRACT"):
+        is_newer(IsNewerInput(
+            ver_parsed=True, ver_cand_pre=False, ver_cur_pre=False, ver_triple="bigger",
+        ))
