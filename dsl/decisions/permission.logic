@@ -1,7 +1,0 @@
-# Engine-agnostic permission: maps command effect to required permission level.
-# The guard chain checks if the caller meets the requirement.
-DECISION requiredPermission DEFAULT write
-  readEffect AT 10 WHEN cmd.effect == read -> read
-  writeEffect AT 20 WHEN cmd.effect == write -> write
-  idempotentEffect AT 25 WHEN cmd.effect == idempotent_write -> write
-END

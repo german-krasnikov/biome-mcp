@@ -1,4 +1,0 @@
-CONTRACT biome.permission
-COVERAGE declared-scope
-FACT cmd.effect enum=read,write,idempotent_write closed
-INPUT requiredPermission cmd.effect

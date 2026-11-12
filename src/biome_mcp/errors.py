@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from typing import Any
 
 
 class ErrorCode(StrEnum):
@@ -17,7 +19,10 @@ class ErrorCode(StrEnum):
 
 
 class BiomeError(Exception):
-    def __init__(self, code: ErrorCode, message: str) -> None:
+    def __init__(
+        self, code: str, message: str, *, details: Mapping[str, Any] | None = None
+    ) -> None:
+        super().__init__(message)
         self.code = code
         self.message = message
-        super().__init__(f"{code}: {message}")
+        self.details = details

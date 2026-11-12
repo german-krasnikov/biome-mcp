@@ -16,4 +16,11 @@ def test_biome_error_carries_code_and_message():
     err = BiomeError(ErrorCode.TIMEOUT, "took too long")
     assert err.code is ErrorCode.TIMEOUT
     assert err.message == "took too long"
-    assert "timeout" in str(err).lower()
+    assert str(err) == "took too long"
+    assert err.details is None
+
+
+def test_biome_error_details_and_plain_str_code():
+    err = BiomeError("custom", "x", details={"k": 1})
+    assert err.code == "custom"
+    assert err.details == {"k": 1}

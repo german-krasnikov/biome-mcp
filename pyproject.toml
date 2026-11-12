@@ -6,8 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.28.0"]
-fastmcp = ["fastmcp>=4.1.8"]
+mcp = ["mcp>=2.3.0,<3"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
@@ -32,6 +31,3 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
-
-[tool.ruff.lint.per-file-ignores]
-"src/biome_mcp/decisions/generated/*.py" = ["SIM103", "SIM108"]

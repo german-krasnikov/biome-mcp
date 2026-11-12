@@ -1,9 +1,0 @@
-EXAMPLES retryGate
-  id | retryErrorCode | retryAttempt | retryMaxRetries -> expected
-  connection_lost_retries | connection_lost | 0 | 3 -> retry
-  timeout_retries | timeout | 0 | 3 -> retry
-  invalid_args_fails | invalid_arguments | 0 | 3 -> fail
-  permission_denied_fails | permission_denied | 0 | 3 -> fail
-  max_retries_reached | connection_lost | 3 | 3 -> max_retries
-  cancelled_fails | cancelled | 0 | 3 -> fail
-END

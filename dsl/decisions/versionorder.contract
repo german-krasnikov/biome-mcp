@@ -1,7 +1,0 @@
-CONTRACT biome.versionorder
-COVERAGE declared-scope
-FACT ver.parsed bool
-FACT ver.candPre bool
-FACT ver.curPre bool
-FACT ver.triple enum=less,equal,greater closed
-INPUT isNewer ver.parsed ver.candPre ver.curPre ver.triple

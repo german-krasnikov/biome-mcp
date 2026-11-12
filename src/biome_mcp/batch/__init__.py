@@ -1,4 +1,4 @@
-"""Batch parsing and execution."""
+"""Batch parsing."""
 
 from biome_mcp.batch.model import (
     BatchDocument,
@@ -8,10 +8,8 @@ from biome_mcp.batch.model import (
     ParsedCommand,
 )
 from biome_mcp.batch.parser import parse_batch
-from biome_mcp.batch.runner import StepResult, run_batch
 
 __all__ = [
     "BatchDocument", "BatchLimits", "LexicalKind",
-    "ParsedArg", "ParsedCommand", "StepResult",
-    "parse_batch", "run_batch",
+    "ParsedArg", "ParsedCommand", "parse_batch",
 ]

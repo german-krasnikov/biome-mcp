@@ -1,6 +1,0 @@
-EXAMPLES requiredPermission
-  id | cmdEffect -> expected
-  read_needs_read | read -> read
-  write_needs_write | write -> write
-  idempotent_needs_write | idempotent_write -> write
-END

@@ -1,6 +1,0 @@
-CONTRACT biome.batch_policy
-COVERAGE declared-scope
-FACT cmd.effect enum=read,write,idempotent_write closed
-FACT error.class enum=transient,permanent,unknown closed
-FACT batch.supportsRollback bool
-INPUT batchPolicy cmd.effect error.class batch.supportsRollback
