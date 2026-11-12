@@ -32,10 +32,10 @@ def test_observe_records_sliding_window():
     mc.observe("latency", 1.0)
     mc.observe("latency", 2.0)
     stats = mc.snapshot()["observations"]["latency"]
-    assert stats["count"] == 2
+    assert stats["n"] == 2
     assert stats["avg"] == 1.5
-    assert stats["min"] == 1.0
-    assert stats["max"] == 2.0
+    assert stats["p50"] == 1.5
+    assert stats["p95"] == 2.0  # < 20 samples → falls back to max()
 
 
 def test_observe_window_caps_at_256():
@@ -43,9 +43,9 @@ def test_observe_window_caps_at_256():
     for i in range(300):
         mc.observe("latency", float(i))
     stats = mc.snapshot()["observations"]["latency"]
-    assert stats["count"] == 256
-    # oldest values (0..43) dropped, newest kept
-    assert stats["max"] == 299.0
+    # oldest values (0..43) dropped, newest (44..299) kept
+    assert stats["n"] == 256
+    assert stats["p95"] == 287.0  # sorted[int(0.95*256)] == sorted[243] == 44+243
 
 
 def test_timer_auto_records_observation():
@@ -53,17 +53,38 @@ def test_timer_auto_records_observation():
     with mc.timer("op"):
         pass
     stats = mc.snapshot()["observations"]["op"]
-    assert stats["count"] == 1
-    assert stats["max"] >= 0.0
+    assert stats["n"] == 1
+    assert stats["avg"] >= 0.0
+
+
+def test_timer_records_milliseconds_by_default():
+    import time as _time
+
+    mc = MetricsCollector()
+    with mc.timer("op"):
+        _time.sleep(0.01)
+    stats = mc.snapshot()["observations"]["op"]
+    assert stats["avg"] >= 5.0  # 10ms sleep recorded as ms, not 0.01s
+
+
+def test_timer_unit_seconds_opt_in():
+    import time as _time
+
+    mc = MetricsCollector()
+    with mc.timer("op", unit="s"):
+        _time.sleep(0.01)
+    stats = mc.snapshot()["observations"]["op"]
+    assert stats["avg"] < 1.0  # seconds, not milliseconds
 
 
 def test_cost_accumulates_amount():
+    """in_rate/out_rate are USD per MILLION tokens (not per-1000)."""
     mc = MetricsCollector()
-    mc.cost("ask", "haiku", in_tokens=1000, out_tokens=500, in_rate=1.0, out_rate=2.0)
+    mc.cost("ask", "haiku", in_tokens=1_000_000, out_tokens=500_000, in_rate=1.0, out_rate=2.0)
     snap = mc.snapshot()
     assert len(snap["costs"]) == 1
     assert snap["costs"][0]["feature"] == "ask"
-    assert snap["total_cost"] == pytest.approx(1.0 * 1 + 2.0 * 0.5)
+    assert snap["total_cost"] == pytest.approx(1.0 * 1.0 + 2.0 * 0.5)
 
 
 def test_event_writes_jsonl_when_sink_configured(tmp_path, monkeypatch):
@@ -83,6 +104,26 @@ def test_event_noop_without_sink(monkeypatch):
     monkeypatch.delenv("BIOME_MCP_METRICS_SINK", raising=False)
     mc = MetricsCollector()
     mc.event("tool_call", name="x")  # must not raise
+
+
+def test_custom_sink_env_var_name(tmp_path, monkeypatch):
+    """A subclass/consumer can point the sink at its own env var name."""
+    sink = tmp_path / "events.jsonl"
+    monkeypatch.delenv("BIOME_MCP_METRICS_SINK", raising=False)
+    monkeypatch.setenv("MY_APP_METRICS_SINK", str(sink))
+    mc = MetricsCollector(sink_env_var="MY_APP_METRICS_SINK")
+    mc.event("tool_call", name="x")
+    assert sink.exists()
+
+
+def test_default_sink_env_var_ignored_when_custom_name_given(tmp_path, monkeypatch):
+    """Custom sink_env_var means the default BIOME_MCP_METRICS_SINK is not consulted."""
+    default_sink = tmp_path / "default.jsonl"
+    monkeypatch.setenv("BIOME_MCP_METRICS_SINK", str(default_sink))
+    monkeypatch.delenv("MY_APP_METRICS_SINK", raising=False)
+    mc = MetricsCollector(sink_env_var="MY_APP_METRICS_SINK")
+    mc.event("tool_call", name="x")
+    assert not default_sink.exists()
 
 
 def test_snapshot_includes_uptime_and_existing_commands():
@@ -122,7 +163,7 @@ def test_timed_decorator_sync_records_observation():
         return a + b
 
     assert add(1, 2) == 3
-    assert mc.snapshot()["observations"]["sync.op"]["count"] == 1
+    assert mc.snapshot()["observations"]["sync.op"]["n"] == 1
 
 
 def test_timed_decorator_async_records_observation():
@@ -134,7 +175,7 @@ def test_timed_decorator_async_records_observation():
 
     result = asyncio.run(add(1, 2))
     assert result == 3
-    assert mc.snapshot()["observations"]["async.op"]["count"] == 1
+    assert mc.snapshot()["observations"]["async.op"]["n"] == 1
 
 
 def test_counted_decorator_sync_increments():

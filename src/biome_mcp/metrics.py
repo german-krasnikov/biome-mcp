@@ -6,6 +6,7 @@ import functools
 import inspect
 import json
 import os
+import statistics
 import time
 from collections import deque
 from collections.abc import Callable
@@ -14,8 +15,22 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 OBSERVATION_WINDOW = 256
+DEFAULT_SINK_ENV_VAR = "BIOME_MCP_METRICS_SINK"
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def p95(seq) -> float:
+    """95th percentile. Falls back to max() below 20 samples — too few for a
+    stable tail estimate, so the worst observed value is the honest answer."""
+    vals = list(seq)
+    if not vals:
+        return 0.0
+    if len(vals) < 20:
+        return max(vals)
+    s = sorted(vals)
+    idx = int(0.95 * len(s))
+    return s[min(idx, len(s) - 1)]
 
 
 @dataclass
@@ -27,12 +42,13 @@ class CommandMetrics:
 
 
 class MetricsCollector:
-    def __init__(self) -> None:
+    def __init__(self, sink_env_var: str = DEFAULT_SINK_ENV_VAR) -> None:
         self._commands: dict[str, CommandMetrics] = {}
         self._counters: dict[str, int] = {}
         self._observations: dict[str, deque[float]] = {}
         self._costs: list[dict[str, Any]] = []
         self._start_time = time.monotonic()
+        self._sink_env_var = sink_env_var
         self._sink_path: Path | None = None
         self._setup_sink()
 
@@ -70,9 +86,13 @@ class MetricsCollector:
         bucket = self._observations.setdefault(key, deque(maxlen=OBSERVATION_WINDOW))
         bucket.append(value)
 
-    def timer(self, key: str) -> Timer:
-        """Context manager that times a block and auto-records to observations."""
-        return Timer(on_exit=lambda elapsed: self.observe(key, elapsed))
+    def timer(self, key: str, unit: str = "ms") -> Timer:
+        """Context manager that times a block and auto-records to observations.
+
+        unit: "ms" (default) or "s" — scales the recorded elapsed duration.
+        """
+        scale = 1000.0 if unit == "ms" else 1.0
+        return Timer(on_exit=lambda elapsed: self.observe(key, elapsed * scale))
 
     # --- LLM cost tracking ---
 
@@ -85,7 +105,8 @@ class MetricsCollector:
         in_rate: float = 0.0,
         out_rate: float = 0.0,
     ) -> None:
-        amount = (in_tokens / 1000.0) * in_rate + (out_tokens / 1000.0) * out_rate
+        """in_rate/out_rate are USD per MILLION tokens."""
+        amount = (in_tokens / 1e6) * in_rate + (out_tokens / 1e6) * out_rate
         entry = {
             "feature": feature,
             "model": model,
@@ -133,8 +154,8 @@ class MetricsCollector:
             lines.append(f"  {key}: {value}")
         for key, stats in snap["observations"].items():
             lines.append(
-                f"  {key}: n={stats['count']} avg={stats['avg']:.4f} "
-                f"min={stats['min']:.4f} max={stats['max']:.4f}"
+                f"  {key}: n={stats['n']} avg={stats['avg']:.4f} "
+                f"p50={stats['p50']:.4f} p95={stats['p95']:.4f}"
             )
         if snap["costs"]:
             lines.append(f"  total_cost: ${snap['total_cost']:.4f}")
@@ -144,16 +165,16 @@ class MetricsCollector:
     def _stats(values: deque[float]) -> dict[str, float]:
         vals = list(values)
         if not vals:
-            return {"count": 0, "avg": 0.0, "min": 0.0, "max": 0.0}
+            return {"n": 0, "p50": 0.0, "p95": 0.0, "avg": 0.0}
         return {
-            "count": len(vals),
+            "n": len(vals),
+            "p50": statistics.median(vals),
+            "p95": p95(vals),
             "avg": sum(vals) / len(vals),
-            "min": min(vals),
-            "max": max(vals),
         }
 
     def _setup_sink(self) -> None:
-        path = os.environ.get("BIOME_MCP_METRICS_SINK")
+        path = os.environ.get(self._sink_env_var)
         self._sink_path = Path(path) if path else None
 
 
