@@ -53,6 +53,10 @@ src/biome_mcp/
 │   ├── ports.py             # Port file registry for multi-instance discovery
 │   ├── discovery.py         # Merge lockfiles + port files → instances
 │   └── resolver.py          # ConnectionResolver: flag→env→config→port_file→default
+├── dsl/                     # Stage 5 (Phase 2)
+│   ├── parser.py            # Parse TOOL blocks from .biome source
+│   ├── codegen.py           # Generate descriptors, schema init, help text
+│   └── lock.py              # Content-lock SHA256 verification
 ├── transport/
 │   ├── base.py              # Transport interface (connect, send, close)
 │   ├── tcp.py               # TCP framing + heartbeat (from Unity)
@@ -185,7 +189,7 @@ class BrowserRetryFacts:
 | 2 | Execution | registry, executor, batch (from Browser), unity-mcp switches |
 | 3 | Rendering | renderer, tree compress, transport (TCP + stdio) |
 | 4 | Integration | browser-mcp switches, delete duplicated code |
-| 5 | CLI | CLI adapter (help/list/describe/call/batch + `serve`), mcp 2.x via CompactMCP. **Phase 1a** (57 tests) + **Phase 1b** multi-port routing (38 tests) |
+| 5 | CLI | CLI adapter + DSL codegen, mcp 2.x via CompactMCP. **Phase 1a** (57) + **Phase 1b** routing (42) + **Phase 2** DSL (24) |
 
 ## Architecture (для Architect)
 

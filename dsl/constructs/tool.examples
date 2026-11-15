@@ -1,0 +1,44 @@
+EXAMPLE a read-only batchable tool with required and optional params
+  SOURCE TOOL scene.inspect "Inspect scene hierarchy" read BATCHABLE
+  SOURCE   PARAM path REQUIRED str "object path filter"
+  SOURCE   PARAM depth int DEFAULT 3 "max tree depth"
+  SOURCE END
+  EXPECT rendered.py_descriptor SCENE_INSPECT = CommandDescriptor(
+  EXPECT rendered.py_descriptor name="scene.inspect",
+  EXPECT rendered.py_descriptor namespace="scene",
+  EXPECT rendered.py_descriptor ParamSpec("path", str, required=True
+  EXPECT rendered.py_descriptor ParamSpec("depth", int, required=False, default=3
+  EXPECT rendered.py_descriptor effect=CommandEffect.READ,
+  EXPECT rendered.py_descriptor batchable=True,
+  EXPECT rendered.py_schema registry.capture("scene.inspect"
+  EXPECT rendered.py_schema "required": ["path"]
+  EXPECT rendered.help == scene.inspect ==
+  EXPECT rendered.help Params: path*:str depth:int=3
+
+EXAMPLE a write tool with blast radius
+  SOURCE TOOL scene.set_active "Activate object" write BLAST 2
+  SOURCE   PARAM path REQUIRED str "object path"
+  SOURCE   PARAM active REQUIRED bool "new active state"
+  SOURCE END
+  EXPECT rendered.py_descriptor SCENE_SET_ACTIVE = CommandDescriptor(
+  EXPECT rendered.py_descriptor effect=CommandEffect.WRITE,
+  EXPECT rendered.py_descriptor batchable=False,
+  EXPECT rendered.py_descriptor blast_radius=2,
+  EXPECT rendered.help [WRITE]
+
+EXAMPLE nested TOOL without END is an error
+  SOURCE TOOL a "x" read
+  SOURCE TOOL b "y" read
+  SOURCE END
+  EXPECT diagnostic DECLARE_SYNTAX at 2:1
+
+EXAMPLE unknown effect is an error
+  SOURCE TOOL a "x" destroy
+  SOURCE END
+  EXPECT diagnostic DECLARE_SYNTAX at 1:1
+
+EXAMPLE PARAM without type is an error
+  SOURCE TOOL a "x" read
+  SOURCE   PARAM p REQUIRED
+  SOURCE END
+  EXPECT diagnostic DECLARE_SYNTAX at 2:3
