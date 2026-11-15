@@ -1,6 +1,8 @@
 """Shared CLI constants — no imports from other cli modules."""
 from biome_mcp.errors import ErrorCode
 
+CLI_CONFIG_FILENAME = "cli-config.json"
+
 TOOL_HINT_THRESHOLD = 30
 
 BUILTIN_DESCS: dict[str, str] = {

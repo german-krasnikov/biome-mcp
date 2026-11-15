@@ -45,7 +45,14 @@ src/biome_mcp/
 │   ├── formatters.py        # list/describe formatting, filter helpers
 │   ├── generic.py           # parse_kv, exit_code_for (re-exports handlers)
 │   ├── _constants.py        # builtin usage/descriptions, EXIT_MAP
-│   └── provider.py          # MCPToolProvider — only cli file importing mcp
+│   ├── provider.py          # MCPToolProvider — only cli file importing mcp
+│   ├── app_profile.py       # AppProfile — consumer-supplied identity
+│   ├── connection.py        # ConnectionSpec — resolved endpoint value object
+│   ├── app_config.py        # AppConfig — per-app ~/.app/cli-config.json
+│   ├── env_vars.py          # BIOME_<APP>_PORT/HOST env var resolution
+│   ├── ports.py             # Port file registry for multi-instance discovery
+│   ├── discovery.py         # Merge lockfiles + port files → instances
+│   └── resolver.py          # ConnectionResolver: flag→env→config→port_file→default
 ├── transport/
 │   ├── base.py              # Transport interface (connect, send, close)
 │   ├── tcp.py               # TCP framing + heartbeat (from Unity)
@@ -178,7 +185,7 @@ class BrowserRetryFacts:
 | 2 | Execution | registry, executor, batch (from Browser), unity-mcp switches |
 | 3 | Rendering | renderer, tree compress, transport (TCP + stdio) |
 | 4 | Integration | browser-mcp switches, delete duplicated code |
-| 5 | CLI | CLI adapter (help/list/describe/call/batch + `serve`), mcp 2.x via CompactMCP. **Phase 1a implemented** (`src/biome_mcp/cli/`, 57 tests) |
+| 5 | CLI | CLI adapter (help/list/describe/call/batch + `serve`), mcp 2.x via CompactMCP. **Phase 1a** (57 tests) + **Phase 1b** multi-port routing (38 tests) |
 
 ## Architecture (для Architect)
 
