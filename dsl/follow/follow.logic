@@ -1,25 +1,20 @@
 # Follow loop decisions.
 
-GIVEN followLoop
-  WHEN is_done
-    THEN result.status IN {"done", "complete", "finished"} -> true
-    THEN max_polls != null AND poll >= max_polls -> true
-    THEN ELSE -> false
+DECISION is_done DEFAULT false
+  WHEN result.status IN {"done", "complete", "finished"} -> true
+  WHEN max_polls != null AND poll >= max_polls -> true
 END
 
-GIVEN followLoop
-  WHEN is_fatal
-    THEN consecutive_errors > max_retries -> true
-    THEN ELSE -> false
+DECISION is_fatal DEFAULT false
+  WHEN consecutive_errors > max_retries -> true
 END
 
 GIVEN followLoop
   WHEN poll_tool
     THEN poll += 1
-    THEN IF result.error THEN consecutive_errors += 1
-    THEN IF NOT result.error THEN consecutive_errors = 0
-    THEN IF is_fatal THEN stop(exit=1)
-    THEN IF is_done THEN stop(exit=0)
+    THEN consecutive_errors = result.error ? consecutive_errors + 1 : 0
+    THEN DECISION is_fatal -> stop(exit=1)
+    THEN DECISION is_done -> stop(exit=0)
 END
 
 GIVEN followLoop

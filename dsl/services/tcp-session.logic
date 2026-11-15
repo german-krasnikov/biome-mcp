@@ -1,10 +1,14 @@
 # TcpSession reconnect-once strategy.
 
+DECISION is_connected DEFAULT false
+  WHEN reader != null AND writer != null -> true
+END
+
 GIVEN tcpSession
-  WHEN call
-    THEN IF is_connected THEN frame_write + frame_read
-    THEN IF ConnectionError THEN reconnect, retry once
-    THEN IF second failure THEN raise ConnectionError
+  WHEN call(payload, timeout)
+    THEN DECISION is_connected -> frame_write(payload) + frame_read(timeout)
+    THEN ON ConnectionError -> reconnect, retry once
+    THEN ON second failure -> raise ConnectionError
 END
 
 GIVEN tcpSession
