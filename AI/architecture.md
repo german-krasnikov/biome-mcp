@@ -39,6 +39,13 @@ src/biome_mcp/
 │   ├── renderer.py          # PlainTextRenderer + budget (from Unity)
 │   ├── tree.py              # Generic hierarchy compression engine
 │   └── profiles.py          # Configurable compress rules (defaults, aliases)
+├── cli/                     # Stage 5 (Phase 1a)
+│   ├── app.py               # BiomeCLI dispatch, ToolProvider Protocol, ToolInfo
+│   ├── handlers.py          # help / list / describe / call / batch handlers
+│   ├── formatters.py        # list/describe formatting, filter helpers
+│   ├── generic.py           # parse_kv, exit_code_for (re-exports handlers)
+│   ├── _constants.py        # builtin usage/descriptions, EXIT_MAP
+│   └── provider.py          # MCPToolProvider — only cli file importing mcp
 ├── transport/
 │   ├── base.py              # Transport interface (connect, send, close)
 │   ├── tcp.py               # TCP framing + heartbeat (from Unity)
@@ -171,7 +178,7 @@ class BrowserRetryFacts:
 | 2 | Execution | registry, executor, batch (from Browser), unity-mcp switches |
 | 3 | Rendering | renderer, tree compress, transport (TCP + stdio) |
 | 4 | Integration | browser-mcp switches, delete duplicated code |
-| 5 | CLI | CLI adapter (list/describe/call/batch), FastMCP 4.x |
+| 5 | CLI | CLI adapter (help/list/describe/call/batch + `serve`), mcp 2.x via CompactMCP. **Phase 1a implemented** (`src/biome_mcp/cli/`, 57 tests) |
 
 ## Architecture (для Architect)
 
