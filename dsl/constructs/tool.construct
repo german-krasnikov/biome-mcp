@@ -1,0 +1,46 @@
+# TOOL construct: one .biome file per consumer declares tools.
+# biome-dsl toolchain generates Python (descriptors, schema, help).
+# Python-based codegen in src/biome_mcp/dsl/ also reads this format.
+SURFACE tools CONSTRUCTS TOOL
+
+CONSTRUCT TOOL VERSION 1 IR 1 SCOPE project
+  HEAD TOOL <name:match([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*) UNIQUE>
+            <summary:string>
+            <effect:enum(read|write|idempotent_write)>
+            [BATCHABLE] [BLAST <blast:int>]
+  ITEM PARAM <pname:match([a-z][a-z0-9_]*) UNIQUE>
+             [REQUIRED] <ptype:enum(str|int|float|bool|list)>
+             [DEFAULT <default:match([^\s"]+)>]
+             <description:string>
+  EXAMPLES tool.examples
+  DECLARE
+  TEMPLATE py_descriptor HEADER "\"\"\"Generated tool descriptors — DO NOT EDIT.\"\"\"\nfrom biome_mcp.models.descriptor import CommandDescriptor, CommandEffect, ParamSpec\n" ESCAPE py
+    {name:upper_snake} = CommandDescriptor(
+        name="{name}",
+        namespace="{name:prefix_dot}",
+        summary="{summary}",
+        params=(
+    EACH PARAM
+            ParamSpec("{pname}", {ptype:py_type}, required={required:py_bool}{?default:, default={default:py_coerce}}, description="{description}"),
+    END
+        ),
+        effect=CommandEffect.{effect:upper},
+        batchable={batchable:py_bool},
+        blast_radius={blast:default(0)},
+    )
+  END
+  TEMPLATE py_schema HEADER "\"\"\"Generated schema registry init — DO NOT EDIT.\"\"\"\n\n\ndef init(registry):" ESCAPE py
+        registry.capture("{name}", {"type": "object", "properties": {
+    EACH PARAM
+            "{pname}": {"type": "{ptype:json_type}", "description": "{description}"},
+    END
+        }, "required": [{required_names}], "additionalProperties": False}, "{summary}")
+  END
+  TEMPLATE help ESCAPE none
+    == {name} ==
+    {summary}{?effect_tag: [{effect:upper}]}
+    EACH PARAM
+    {pname}{required:star}:{ptype}{?default:={default}}
+    END
+  END
+END
