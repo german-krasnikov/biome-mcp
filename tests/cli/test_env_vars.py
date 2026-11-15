@@ -34,3 +34,31 @@ def test_s4_env_host_absent() -> None:
 def test_s3_env_host_set(monkeypatch: object) -> None:
     monkeypatch.setenv("BIOME_UNITY_BIOME_MCP_HOST", "192.168.1.10")  # type: ignore[attr-defined]
     assert env_host("unity-biome-mcp") == "192.168.1.10"
+
+
+def test_alias_port_takes_priority(monkeypatch: object) -> None:
+    """Alias env var wins over canonical BIOME_ var (backward compat)."""
+    monkeypatch.setenv("UNITY_MCP_PORT", "9500")  # type: ignore[attr-defined]
+    monkeypatch.setenv("BIOME_UNITY_BIOME_MCP_PORT", "6401")  # type: ignore[attr-defined]
+    aliases: tuple[tuple[str, str], ...] = (("UNITY_MCP_PORT", "PORT"),)
+    assert env_port("unity-biome-mcp", aliases) == 9500
+
+
+def test_alias_port_fallback_to_canonical(monkeypatch: object) -> None:
+    """When alias not set, canonical is used."""
+    monkeypatch.setenv("BIOME_UNITY_BIOME_MCP_PORT", "6401")  # type: ignore[attr-defined]
+    aliases: tuple[tuple[str, str], ...] = (("UNITY_MCP_PORT", "PORT"),)
+    assert env_port("unity-biome-mcp", aliases) == 6401
+
+
+def test_alias_host(monkeypatch: object) -> None:
+    """Host alias resolves from legacy env var."""
+    monkeypatch.setenv("UNITY_MCP_HOST", "10.0.0.1")  # type: ignore[attr-defined]
+    aliases: tuple[tuple[str, str], ...] = (("UNITY_MCP_HOST", "HOST"),)
+    assert env_host("unity-biome-mcp", aliases) == "10.0.0.1"
+
+
+def test_no_aliases_backward_compat() -> None:
+    """Empty aliases tuple — no change to existing behavior."""
+    assert env_port("nonexistent-xyz", ()) is None
+    assert env_host("nonexistent-xyz", ()) is None

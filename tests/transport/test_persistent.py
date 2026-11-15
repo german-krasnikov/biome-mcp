@@ -106,3 +106,23 @@ async def test_T6_nested_sessions():
                 assert get_active_session() is inner
             assert get_active_session() is outer
     assert get_active_session() is None
+
+
+async def test_T7_on_connect_called_after_open():
+    """on_connect hook is invoked after open_connection."""
+    reader = _make_reader(b"ok")
+    writer = _make_writer()
+    hook = AsyncMock()
+    with patch("asyncio.open_connection", AsyncMock(return_value=(reader, writer))):
+        async with TcpSession("localhost", 9600, on_connect=hook):
+            pass
+    hook.assert_called_once_with(reader, writer)
+
+
+async def test_T8_no_on_connect_unchanged():
+    """TcpSession without on_connect works exactly as before."""
+    reader = _make_reader(b"ok")
+    writer = _make_writer()
+    with patch("asyncio.open_connection", AsyncMock(return_value=(reader, writer))):
+        async with TcpSession("localhost", 9600) as session:
+            assert get_active_session() is session

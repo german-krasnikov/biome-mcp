@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 
 from biome_mcp.transport.framing import apply_socket_options, frame_read_with_timeout, frame_write
@@ -10,17 +11,21 @@ _session_var: ContextVar[TcpSession | None] = ContextVar("tcp_session", default=
 
 DEFAULT_TIMEOUT = 15.0
 
+OnConnectHook = Callable[[asyncio.StreamReader, asyncio.StreamWriter], Awaitable[None]]
+
 
 class TcpSession:
     """Async context manager that owns one persistent (reader, writer) pair.
 
     Sets _session_var on enter, resets on exit.
     Reconnects once on ConnectionError/EOFError; raises on second failure.
+    on_connect: optional async hook called after each open_connection (including reconnects).
     """
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, *, on_connect: OnConnectHook | None = None) -> None:
         self._host = host
         self._port = port
+        self._on_connect = on_connect
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._token = None
@@ -40,6 +45,8 @@ class TcpSession:
         sock = self._writer.transport.get_extra_info("socket")
         if sock is not None:
             apply_socket_options(sock)
+        if self._on_connect is not None:
+            await self._on_connect(self._reader, self._writer)
 
     async def _close(self) -> None:
         if self._writer is not None:

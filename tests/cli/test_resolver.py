@@ -119,3 +119,17 @@ def test_s8_flag_beats_env(tmp_path: Path, monkeypatch: object) -> None:
     spec = r.resolve(cli_port=6401)
     assert spec.source == "flag"
     assert spec.port == 6401
+
+
+def test_alias_env_var_in_resolver(tmp_path: Path, monkeypatch: object) -> None:
+    """Profile.env_aliases passed through to env_port/env_host."""
+    profile = AppProfile(
+        app_name="test-app",
+        default_port=6400,
+        data_dir=tmp_path,
+        env_aliases=(("LEGACY_PORT", "PORT"),),
+    )
+    monkeypatch.setenv("LEGACY_PORT", "7777")  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve()
+    assert spec.port == 7777
+    assert spec.source == "env"

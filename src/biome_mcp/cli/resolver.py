@@ -30,9 +30,9 @@ class ConnectionResolver:
         if cli_port is not None:
             return self._spec(cli_host or p.default_host, cli_port, "flag")
 
-        ep = env_port(p.app_name)
+        ep = env_port(p.app_name, p.env_aliases)
         if ep is not None:
-            return self._spec(env_host(p.app_name) or p.default_host, ep, "env")
+            return self._spec(env_host(p.app_name, p.env_aliases) or p.default_host, ep, "env")
 
         cfg = AppConfig.load(p.data_dir / CLI_CONFIG_FILENAME)
         if cfg.port:
