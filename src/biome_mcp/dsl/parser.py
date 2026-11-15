@@ -85,7 +85,11 @@ def _parse_tool_head(line: str, lineno: int) -> ToolDecl:
     rest = tokens[4:]
     for i, t in enumerate(rest):
         if t == "BLAST" and i + 1 < len(rest):
-            blast = int(rest[i + 1])
+            try:
+                blast = int(rest[i + 1])
+            except ValueError:
+                msg = f"line {lineno}: BLAST requires an integer, got '{rest[i + 1]}'"
+                raise SyntaxError(msg) from None
 
     return ToolDecl(
         name=name, summary=summary, effect=effect,
@@ -126,9 +130,30 @@ def _parse_param(line: str, lineno: int) -> ParamDecl:
             raise SyntaxError(msg)
         default = tokens[idx]
         idx += 1
+        _validate_default(ptype, default, pname, lineno)
 
     description = tokens[idx] if idx < len(tokens) else ""
     return ParamDecl(
         name=pname, param_type=ptype, required=required,
         default=default, description=description,
     )
+
+
+def _validate_default(ptype: str, default: str, pname: str, lineno: int) -> None:
+    loc = f"line {lineno}: DEFAULT for {ptype} param '{pname}'"
+    if ptype == "int":
+        try:
+            int(default)
+        except ValueError:
+            raise SyntaxError(f"{loc} must be integer, got '{default}'") from None
+    elif ptype == "float":
+        try:
+            float(default)
+        except ValueError:
+            raise SyntaxError(f"{loc} must be number, got '{default}'") from None
+    elif ptype == "bool":
+        if default.lower() not in ("true", "false", "yes", "no"):
+            msg = f"{loc} must be true/false, got '{default}'"
+            raise SyntaxError(msg)
+    elif ptype == "list":
+        raise SyntaxError(f"line {lineno}: DEFAULT not supported for list param '{pname}'")

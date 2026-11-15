@@ -90,6 +90,30 @@ def test_end_without_tool_raises() -> None:
         parse_tools("END")
 
 
+def test_blast_non_int_raises() -> None:
+    src = 'TOOL a "x" write BLAST abc\nEND'
+    with pytest.raises(SyntaxError, match="BLAST"):
+        parse_tools(src)
+
+
+def test_default_int_invalid_raises() -> None:
+    src = 'TOOL a "x" read\n  PARAM p int DEFAULT hello "desc"\nEND'
+    with pytest.raises(SyntaxError, match="integer"):
+        parse_tools(src)
+
+
+def test_default_bool_invalid_raises() -> None:
+    src = 'TOOL a "x" read\n  PARAM p bool DEFAULT maybe "desc"\nEND'
+    with pytest.raises(SyntaxError, match="true/false"):
+        parse_tools(src)
+
+
+def test_default_list_rejected() -> None:
+    src = 'TOOL a "x" read\n  PARAM p list DEFAULT x "desc"\nEND'
+    with pytest.raises(SyntaxError, match="list"):
+        parse_tools(src)
+
+
 def test_comments_and_blank_lines() -> None:
     src = "# comment\n\n" + _MINIMAL
     assert len(parse_tools(src)) == 1

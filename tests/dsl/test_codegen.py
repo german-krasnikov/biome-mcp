@@ -59,7 +59,7 @@ def test_s5_batchable_blast_roundtrip() -> None:
 def test_s6_help_text_format() -> None:
     out = gen_help_text(_tools())
     assert "== scene.inspect ==" in out
-    assert "Params: path*:str depth:int=3" in out
+    assert "Params: path*:string depth:integer=3" in out
     assert "[WRITE]" in out
 
 
@@ -79,8 +79,10 @@ def test_s6_help_matches_schema_registry() -> None:
     help_inspect = help_text.split("\n\n")[0]
     assert "== scene.inspect ==" in reg_text
     assert "== scene.inspect ==" in help_inspect
-    assert "path*:str" in reg_text
-    assert "path*:str" in help_inspect
+    assert "path*:string" in reg_text
+    assert "path*:string" in help_inspect
+    assert "depth:integer" in reg_text
+    assert "depth:integer" in help_inspect
 
 
 def test_escape_quotes_in_summary() -> None:
@@ -91,11 +93,22 @@ def test_escape_quotes_in_summary() -> None:
     assert "Use 'inspect' mode" in out
 
 
+def test_idempotent_write_roundtrip() -> None:
+    src = 'TOOL cache.clear "Clear cache" idempotent_write BATCHABLE\nEND'
+    tools = parse_tools(src)
+    desc = gen_descriptors(tools)
+    assert "CommandEffect.IDEMPOTENT_WRITE" in desc
+    help_out = gen_help_text(tools)
+    assert "[IDEMPOTENT_WRITE]" in help_out
+
+
 def test_escape_double_quotes_in_summary() -> None:
     src = 'TOOL a.b "Say \\"hello\\"" read\nEND'
     tools = parse_tools(src)
     desc = gen_descriptors(tools)
-    assert '\\"hello\\"' in desc
+    assert 'Say "hello"' in desc
+    compiled = compile(desc, "<test>", "exec")
+    assert compiled is not None
 
 
 def test_descriptors_importable(tmp_path) -> None:

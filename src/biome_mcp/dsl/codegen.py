@@ -1,6 +1,7 @@
 """Generate Python source from parsed TOOL declarations."""
 from __future__ import annotations
 
+import json as _json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,10 +18,6 @@ def _const_name(tool_name: str) -> str:
     return tool_name.replace(".", "_").upper()
 
 
-def _esc(s: str) -> str:
-    return s.replace("\\", "\\\\").replace('"', '\\"')
-
-
 def gen_descriptors(tools: list[ToolDecl]) -> str:
     lines = [
         '"""Generated tool descriptors — DO NOT EDIT."""',
@@ -34,7 +31,7 @@ def gen_descriptors(tools: list[ToolDecl]) -> str:
         lines.append(f"{_const_name(t.name)} = CommandDescriptor(")
         lines.append(f'    name="{t.name}",')
         lines.append(f'    namespace="{ns}",')
-        lines.append(f'    summary="{_esc(t.summary)}",')
+        lines.append(f"    summary={t.summary!r},")
         if params:
             lines.append(f"    params=(\n        {params},\n    ),")
         else:
@@ -52,7 +49,7 @@ def _descriptor_param(p: ParamDecl) -> str:
     parts.append(f"required={p.required}")
     if p.default is not None:
         parts.append(f"default={_coerce_default(p)}")
-    parts.append(f'description="{_esc(p.description)}"')
+    parts.append(f"description={p.description!r}")
     return f"ParamSpec({', '.join(parts)})"
 
 
@@ -82,7 +79,7 @@ def gen_schema_init(tools: list[ToolDecl]) -> str:
         schema += f'"required": [{req_names}], '
         schema += '"additionalProperties": False'
         schema += "}"
-        lines.append(f'    registry.capture("{t.name}", {schema}, "{_esc(t.summary)}")')
+        lines.append(f"    registry.capture(\"{t.name}\", {schema}, {_json.dumps(t.summary)})")
     return "\n".join(lines) + "\n"
 
 
@@ -90,7 +87,8 @@ def _json_properties(params: list[ParamDecl]) -> str:
     parts = []
     for p in params:
         jtype = _JSON_TYPE[p.param_type]
-        entry = f'"{p.name}": {{"type": "{jtype}", "description": "{p.description}"}}'
+        desc_json = _json.dumps(p.description)
+        entry = f'"{p.name}": {{"type": "{jtype}", "description": {desc_json}}}'
         parts.append(entry)
     return "{" + ", ".join(parts) + "}"
 
@@ -105,7 +103,8 @@ def gen_help_text(tools: list[ToolDecl]) -> str:
         for p in t.params:
             star = "*" if p.required else ""
             default = f"={p.default}" if p.default else ""
-            params.append(f"{p.name}{star}:{p.param_type}{default}")
+            jtype = _JSON_TYPE[p.param_type]
+            params.append(f"{p.name}{star}:{jtype}{default}")
         if params:
             lines.append("Params: " + " ".join(params))
         blocks.append("\n".join(lines))
