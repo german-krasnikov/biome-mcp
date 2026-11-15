@@ -1,0 +1,9 @@
+DSL 1
+
+RECORD ToolInfo KEY name
+  name: text
+  description: text
+  input_schema: dict
+  effect: text?
+  namespace: text?
+END

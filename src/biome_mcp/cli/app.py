@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from typing import Any, NoReturn, NotRequired, Protocol, TypedDict, runtime_checkable
+from typing import TYPE_CHECKING, Any, NoReturn, NotRequired, Protocol, TypedDict, runtime_checkable
+
+if TYPE_CHECKING:
+    from biome_mcp.cli.connection import ConnectionSpec
+    from biome_mcp.cli.follow_policy import FollowPolicy
 
 
 class ToolInfo(TypedDict):
@@ -30,12 +34,16 @@ class BiomeCLI:
         version: str = "",
         serve: Callable[[], None] | None = None,
         schema_registry: Any = None,
+        spec: ConnectionSpec | None = None,
+        follow: FollowPolicy | None = None,
     ) -> None:
         self._provider = provider
         self._name = name
         self._version = version
         self._serve = serve
         self._schema_registry = schema_registry
+        self._spec = spec
+        self._follow = follow
         self._registry: dict[str, Callable[[list[str]], int]] = {}
         self._register_builtins()
 
@@ -51,7 +59,9 @@ class BiomeCLI:
         self._registry["describe"] = make_describe_handler(
             self._provider, registry=self._schema_registry, app_name=self._name,
         )
-        self._registry["call"] = make_call_handler(self._provider)
+        self._registry["call"] = make_call_handler(
+            self._provider, spec=self._spec, follow=self._follow
+        )
         self._registry["batch"] = make_batch_handler(self._provider)
         # help is registered last so it sees the full registry
         self._registry["help"] = make_help_handler(self._name, self._registry)

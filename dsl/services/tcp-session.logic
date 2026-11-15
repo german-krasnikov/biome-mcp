@@ -1,0 +1,19 @@
+# TcpSession reconnect-once strategy.
+
+GIVEN tcpSession
+  WHEN call
+    THEN IF is_connected THEN frame_write + frame_read
+    THEN IF ConnectionError THEN reconnect, retry once
+    THEN IF second failure THEN raise ConnectionError
+END
+
+GIVEN tcpSession
+  WHEN connect
+    THEN reader, writer = open_connection(host, port)
+    THEN apply_socket_options(writer.socket)
+END
+
+GIVEN tcpSession
+  WHEN close
+    THEN writer.close(), writer = None, reader = None
+END

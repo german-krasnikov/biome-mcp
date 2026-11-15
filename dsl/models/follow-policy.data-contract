@@ -1,0 +1,8 @@
+DSL 1
+
+RECORD FollowPolicy
+  interval_bounds_min: number = 0.0
+  interval_bounds_max: number = 3600.0
+  max_retries: number = 0
+  poll_timeout: number? = None
+END

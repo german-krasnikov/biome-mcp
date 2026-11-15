@@ -1,0 +1,31 @@
+# Completion detection: which JSON status values end a --follow session.
+# Protocol: tool returns {"status": "<value>"} in its text field.
+# Source of truth for _default_is_done in cli/follow_policy.py.
+
+EXAMPLE done status ends polling
+  SOURCE {"status": "done"}
+  EXPECT is_done true
+
+EXAMPLE complete status ends polling
+  SOURCE {"status": "complete"}
+  EXPECT is_done true
+
+EXAMPLE finished status ends polling
+  SOURCE {"status": "finished"}
+  EXPECT is_done true
+
+EXAMPLE running status continues polling
+  SOURCE {"status": "running"}
+  EXPECT is_done false
+
+EXAMPLE unknown key does not end polling
+  SOURCE {"other": "done"}
+  EXPECT is_done false
+
+EXAMPLE plain text does not end polling
+  SOURCE plain text, no json
+  EXPECT is_done false
+
+EXAMPLE empty text does not end polling
+  SOURCE
+  EXPECT is_done false

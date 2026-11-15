@@ -1,0 +1,8 @@
+DSL 1
+
+RECORD ParsedArg KEY key
+  key: text
+  kind: LexicalKind
+  raw: text
+  value: any
+END

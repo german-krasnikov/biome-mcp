@@ -1,0 +1,46 @@
+# Follow loop behavior examples.
+
+EXAMPLE done on first poll exits 0
+  GIVEN interval = 0, max_polls = null
+  WHEN poll_tool returns {"status": "done"}
+  THEN poll = 1, exit = 0, complete = true
+
+EXAMPLE three running then done
+  GIVEN interval = 0, max_polls = null
+  WHEN poll_tool returns "running" x3 then {"status": "done"}
+  THEN poll = 4, exit = 0, complete = true
+
+EXAMPLE max_polls stops polling
+  GIVEN interval = 0, max_polls = 2
+  WHEN poll_tool returns "running" x2
+  THEN poll = 2, exit = 0, complete = true
+
+EXAMPLE failed result exits 1
+  GIVEN interval = 0, max_retries = 0
+  WHEN poll_tool returns FAILED
+  THEN poll = 1, exit = 1, error = true
+
+EXAMPLE keyboard interrupt exits 130
+  GIVEN interval = 0
+  WHEN poll_tool raises KeyboardInterrupt on poll 2
+  THEN exit = 130, interrupted = true
+
+EXAMPLE max_retries suppresses transient errors
+  GIVEN interval = 0, max_retries = 2
+  WHEN poll_tool returns FAILED x2 then {"status": "done"}
+  THEN poll = 3, exit = 0
+
+EXAMPLE max_retries resets on success
+  GIVEN interval = 0, max_retries = 1
+  WHEN poll_tool returns FAILED, "ok", FAILED, "ok", {"status": "done"}
+  THEN poll = 5, exit = 0
+
+EXAMPLE interval clamped to bounds
+  GIVEN interval_bounds = [1.0, 60.0]
+  WHEN interval = 0s
+  THEN effective_interval = 1.0
+
+EXAMPLE custom is_done overrides default
+  GIVEN is_done = (r -> "DONE" in r.text)
+  WHEN poll_tool returns "DONE"
+  THEN exit = 0, complete = true

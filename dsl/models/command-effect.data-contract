@@ -1,0 +1,7 @@
+DSL 1
+
+ENUM CommandEffect
+  READ
+  WRITE
+  IDEMPOTENT_WRITE
+END

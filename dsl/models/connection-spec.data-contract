@@ -1,0 +1,10 @@
+DSL 1
+
+RECORD ConnectionSpec
+  host: text
+  port: number
+  protocol: text
+  app_name: text
+  source: text
+  label: text? = None
+END

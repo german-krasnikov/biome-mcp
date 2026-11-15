@@ -1,0 +1,9 @@
+DSL 1
+
+RECORD ParamSpec KEY name
+  name: text
+  param_type: type
+  required: bool
+  default: any = None
+  description: text
+END

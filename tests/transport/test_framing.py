@@ -12,7 +12,7 @@ import pytest
 
 from biome_mcp.transport.framing import (
     MAX_FRAME_BYTES,
-    _apply_socket_options,
+    apply_socket_options as _apply_socket_options,
     frame_read,
     frame_read_with_timeout,
     frame_write,

@@ -1,0 +1,9 @@
+DSL 1
+
+RECORD CommandResult
+  status: CommandStatus
+  text: text
+  data: any = None
+  complete: bool = true
+  error_code: text? = None
+END

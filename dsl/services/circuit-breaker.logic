@@ -1,0 +1,29 @@
+# CircuitBreaker state transitions.
+
+GIVEN circuitBreaker
+  WHEN record_success
+    THEN state = "closed", failures = 0
+END
+
+GIVEN circuitBreaker
+  WHEN record_failure
+    THEN failures += 1
+    THEN IF failures >= threshold THEN state = "open", opened_at = now()
+END
+
+GIVEN circuitBreaker
+  WHEN allow_request
+    THEN IF state == "closed" -> true
+    THEN IF state == "open" AND elapsed(opened_at) >= cooldown -> release_probe
+    THEN ELSE -> false
+END
+
+GIVEN circuitBreaker
+  WHEN is_open
+    THEN state == "open"
+END
+
+GIVEN circuitBreaker
+  WHEN reset
+    THEN state = "closed", failures = 0, opened_at = 0.0
+END

@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any
 
 
-class CommandStatus(StrEnum):
+class CommandStatus(StrEnum):  # dsl/models/command-status.data-contract
     OK = "ok"
     INVALID_ARGS = "invalid_args"
     FAILED = "failed"
@@ -17,7 +17,7 @@ class CommandStatus(StrEnum):
 
 
 @dataclass(frozen=True)
-class CommandResult:
+class CommandResult:  # dsl/models/command-result.data-contract
     status: CommandStatus
     text: str
     data: Any = None

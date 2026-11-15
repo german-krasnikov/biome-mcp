@@ -1,4 +1,7 @@
-"""CircuitBreaker — CLOSED/OPEN/HALF_OPEN with external readiness check."""
+"""CircuitBreaker — CLOSED/OPEN/HALF_OPEN with external readiness check.
+
+DSL source: dsl/services/circuit-breaker.feature
+"""
 
 from __future__ import annotations
 

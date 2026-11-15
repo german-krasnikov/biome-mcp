@@ -1,0 +1,36 @@
+# CircuitBreaker behavior examples.
+
+EXAMPLE closed breaker allows requests
+  GIVEN state = "closed", failures = 0, threshold = 3
+  WHEN allow_request
+  THEN result = true
+
+EXAMPLE failures below threshold stay closed
+  GIVEN state = "closed", failures = 1, threshold = 3
+  WHEN record_failure
+  THEN state = "closed", failures = 2
+
+EXAMPLE failures at threshold opens breaker
+  GIVEN state = "closed", failures = 2, threshold = 3
+  WHEN record_failure
+  THEN state = "open"
+
+EXAMPLE open breaker rejects requests
+  GIVEN state = "open", opened_at = recent, cooldown = 60
+  WHEN allow_request
+  THEN result = false
+
+EXAMPLE open breaker after cooldown allows probe
+  GIVEN state = "open", opened_at = old, cooldown = 60
+  WHEN allow_request
+  THEN result = true, state = "half_open"
+
+EXAMPLE success resets to closed
+  GIVEN state = "half_open", failures = 3
+  WHEN record_success
+  THEN state = "closed", failures = 0
+
+EXAMPLE reset clears all state
+  GIVEN state = "open", failures = 5
+  WHEN reset
+  THEN state = "closed", failures = 0

@@ -91,8 +91,27 @@ class MCPToolProvider:
             return None
         return self._make_tool_info(name, tool)
 
+    def _cb_reject(self) -> CommandResult | None:
+        if self._cb is not None and not self._cb.allow_request():
+            return CommandResult.error(
+                ErrorCode.CONNECTION_LOST,
+                f"circuit open, retry in {self._cb.remaining():.0f}s",
+            )
+        return None
+
+    def _cb_ok(self, text: str) -> CommandResult:
+        if self._cb is not None:
+            self._cb.record_success()
+        return CommandResult.ok(text)
+
+    def _cb_fail(self, exc: Exception) -> CommandResult:
+        if self._cb is not None:
+            self._cb.record_failure()
+        if isinstance(exc, BiomeError):
+            return CommandResult.error(exc.code, exc.message)
+        return CommandResult.error(ErrorCode.INTERNAL_ERROR, str(exc))
+
     def call_tool_sync(self, name: str, args: dict[str, Any]) -> CommandResult:
-        # Async guard
         try:
             asyncio.get_running_loop()
             raise BiomeError(
@@ -100,29 +119,30 @@ class MCPToolProvider:
                 "CLI called from async context — use await directly",
             )
         except RuntimeError:
-            pass  # No running loop — safe to proceed
+            pass
 
-        # Circuit breaker fast-fail
-        if self._cb is not None and not self._cb.allow_request():
-            return CommandResult.error(
-                ErrorCode.CONNECTION_LOST,
-                f"circuit open, retry in {self._cb.remaining():.0f}s",
-            )
+        reject = self._cb_reject()
+        if reject is not None:
+            return reject
 
         ctx = self._metrics.timer(f"cli.{name}") if self._metrics else nullcontext()
-
         try:
             with ctx:
                 text = asyncio.run(self._call_async(name, args))
-            if self._cb is not None:
-                self._cb.record_success()
-            return CommandResult.ok(text)
+            return self._cb_ok(text)
         except Exception as exc:
-            if self._cb is not None:
-                self._cb.record_failure()
-            if isinstance(exc, BiomeError):
-                return CommandResult.error(exc.code, exc.message)
-            return CommandResult.error(ErrorCode.INTERNAL_ERROR, str(exc))
+            return self._cb_fail(exc)
+
+    async def call_tool_async(self, name: str, args: dict[str, Any]) -> CommandResult:
+        """Async variant used by follow mode — does not create a new event loop."""
+        reject = self._cb_reject()
+        if reject is not None:
+            return reject
+        try:
+            text = await self._call_async(name, args)
+            return self._cb_ok(text)
+        except Exception as exc:
+            return self._cb_fail(exc)
 
     async def _call_async(self, name: str, args: dict[str, Any]) -> str:
         raw = await self._mcp.call_tool(name, args)

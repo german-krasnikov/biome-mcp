@@ -13,7 +13,7 @@ _TCP_KEEPINTVL_DARWIN = 0x101
 _TCP_KEEPCNT_DARWIN = 0x102
 
 
-def _apply_socket_options(sock) -> None:
+def apply_socket_options(sock) -> None:
     setsockopt = getattr(sock, "setsockopt", None)
     if not callable(setsockopt):
         return

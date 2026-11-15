@@ -1,0 +1,31 @@
+# TcpSession behavior examples.
+
+EXAMPLE context manager sets ContextVar
+  GIVEN host = "127.0.0.1", port = 9600
+  WHEN enter session
+  THEN get_active_session() is session
+
+EXAMPLE exit resets ContextVar
+  GIVEN active session
+  WHEN exit session
+  THEN get_active_session() is None
+
+EXAMPLE call succeeds on first attempt
+  GIVEN connected session
+  WHEN call(payload)
+  THEN returns response bytes
+
+EXAMPLE reconnect once on connection drop
+  GIVEN connected session, reader fails with ConnectionResetError
+  WHEN call(payload)
+  THEN reconnects, retries, returns response
+
+EXAMPLE double failure raises
+  GIVEN connected session, both attempts fail
+  WHEN call(payload)
+  THEN raises ConnectionError
+
+EXAMPLE nested sessions restore outer
+  GIVEN outer session active
+  WHEN enter inner session, exit inner
+  THEN get_active_session() is outer

@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any
 
 
-class ErrorCode(StrEnum):
+class ErrorCode(StrEnum):  # dsl/models/error-code.data-contract
     CONNECTION_LOST = "connection_lost"
     COMMAND_NOT_FOUND = "command_not_found"
     INVALID_ARGUMENTS = "invalid_arguments"

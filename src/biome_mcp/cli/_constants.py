@@ -17,7 +17,7 @@ BUILTIN_DESCS: dict[str, str] = {
 BUILTIN_USAGE: dict[str, str] = {
     "list": "list [--ns NS] [--effect read|write] [--grep TEXT] [--json] [--flat]",
     "describe": "describe <tool> [--json]",
-    "call": "call <tool> [key=value ...]",
+    "call": "call <tool> [key=value ...] [--follow INTERVAL] [--max-polls N]",
     "batch": 'batch "<dsl>" | --file FILE',
     "serve": "serve",
     "help": "help [subcommand]",

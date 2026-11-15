@@ -8,7 +8,7 @@ Source = Literal["flag", "env", "config", "port_file", "lock", "default"]
 
 
 @dataclass(frozen=True, slots=True)
-class ConnectionSpec:
+class ConnectionSpec:  # dsl/models/connection-spec.data-contract
     host: str
     port: int
     protocol: str

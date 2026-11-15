@@ -1,0 +1,10 @@
+DSL 1
+
+ENUM LexicalKind
+  BARE
+  QUOTED
+  BOOLEAN
+  NULL
+  NUMBER
+  JSON_LITERAL
+END

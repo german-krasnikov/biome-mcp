@@ -22,9 +22,15 @@ from .formatters import (
 
 if TYPE_CHECKING:
     from biome_mcp.cli.app import ToolProvider
+    from biome_mcp.cli.connection import ConnectionSpec
+    from biome_mcp.cli.follow_policy import FollowPolicy
     from biome_mcp.schema_registry import SchemaRegistry
 
 _Handler = Callable[[list[str]], int]
+
+
+def _err(msg: str) -> None:
+    print(msg, file=sys.stderr)
 
 
 def make_help_handler(app_name: str, registry: dict[str, object]) -> _Handler:
@@ -36,7 +42,7 @@ def make_help_handler(app_name: str, registry: dict[str, object]) -> _Handler:
             elif sub in registry:
                 print(f"Usage: {app_name} {sub} [args]")
             else:
-                print(f"error: unknown subcommand '{sub}'", file=sys.stderr)
+                _err(f"error: unknown subcommand '{sub}'")
                 return 1
             return 0
 
@@ -108,13 +114,13 @@ def make_describe_handler(
         args = p.parse_args(argv)
 
         if not args.tool:
-            print("error: describe requires tool name", file=sys.stderr)
+            _err("error: describe requires tool name")
             return 3
 
         info = provider.get_tool(args.tool)
         if info is None:
-            print(f"error: tool '{args.tool}' not found", file=sys.stderr)
-            print(f"hint: run `{app_name} list` to see available tools", file=sys.stderr)
+            _err(f"error: tool '{args.tool}' not found")
+            _err(f"hint: run `{app_name} list` to see available tools")
             return 2
 
         if args.as_json:
@@ -130,24 +136,40 @@ def make_describe_handler(
     return handler
 
 
-def make_call_handler(provider: ToolProvider) -> _Handler:
+def make_call_handler(
+    provider: ToolProvider,
+    spec: ConnectionSpec | None = None,
+    follow: FollowPolicy | None = None,
+) -> _Handler:
     def handler(argv: list[str]) -> int:
         if not argv:
-            print("error: call requires a tool name", file=sys.stderr)
+            _err("error: call requires a tool name")
             return 3
-        name, *rest = argv
+
+        p = argparse.ArgumentParser(add_help=False)
+        p.add_argument("--follow", default=None)
+        p.add_argument("--max-polls", type=int, default=None, dest="max_polls")
+        known, rest = p.parse_known_args(argv)
+
+        if known.follow is not None:
+            return _run_follow(provider, rest, known.follow, known.max_polls, spec, follow)
+
+        if not rest:
+            _err("error: call requires a tool name")
+            return 3
+        name, *kv = rest
 
         from .generic import exit_code_for, parse_kv
 
         try:
-            args = parse_kv(rest)
+            args = parse_kv(kv)
         except ValueError as exc:
-            print(f"error: {exc}", file=sys.stderr)
+            _err(f"error: {exc}")
             return 3
         try:
             result = provider.call_tool_sync(name, args)
         except BiomeError as exc:
-            print(f"error: {name}: {exc.message}", file=sys.stderr)
+            _err(f"error: {name}: {exc.message}")
             return exit_code_for(exc)
         print(result.text)
         if not result.complete:
@@ -155,6 +177,60 @@ def make_call_handler(provider: ToolProvider) -> _Handler:
         return 0
 
     return handler
+
+
+def _run_follow(
+    provider: ToolProvider,
+    argv: list[str],
+    follow_str: str,
+    max_polls: int | None,
+    spec: ConnectionSpec | None,
+    follow: FollowPolicy | None,
+) -> int:
+    import asyncio
+
+    from biome_mcp.cli.follow import follow_loop, parse_interval
+    from biome_mcp.cli.follow_policy import FollowPolicy as _FP
+
+    try:
+        interval = parse_interval(follow_str)
+    except ValueError as exc:
+        _err(f"error: --follow: {exc}")
+        return 3
+
+    if not argv:
+        _err("error: call requires a tool name")
+        return 3
+
+    name, *rest = argv
+    from .generic import parse_kv
+
+    try:
+        args = parse_kv(rest)
+    except ValueError as exc:
+        _err(f"error: {exc}")
+        return 3
+
+    if not hasattr(provider, "call_tool_async"):
+        _err("error: provider does not support --follow")
+        return 1
+
+    policy = follow if follow is not None else _FP()
+
+    if spec is not None and spec.protocol == "tcp":
+        from biome_mcp.transport.persistent import TcpSession
+
+        async def _with_session() -> int:
+            async with TcpSession(spec.host, spec.port):
+                return await follow_loop(
+                    provider.call_tool_async, name, args, interval, max_polls, policy
+                )
+
+        return asyncio.run(_with_session())
+
+    return asyncio.run(
+        follow_loop(provider.call_tool_async, name, args, interval, max_polls, policy)
+    )
 
 
 def make_batch_handler(provider: ToolProvider) -> _Handler:
@@ -173,13 +249,13 @@ def make_batch_handler(provider: ToolProvider) -> _Handler:
             try:
                 dsl = Path(args.file).read_text(encoding="utf-8")
             except OSError as exc:
-                print(f"error: {exc}", file=sys.stderr)
+                _err(f"error: {exc}")
                 return 1
 
         try:
             doc = parse_batch(dsl)
         except BiomeError as exc:
-            print(f"error: batch: {exc.message}", file=sys.stderr)
+            _err(f"error: batch: {exc.message}")
             return exit_code_for(exc)
 
         any_error = False
@@ -191,10 +267,7 @@ def make_batch_handler(provider: ToolProvider) -> _Handler:
                 prefix = f"{cmd.name}: " if multi else ""
                 print(f"{prefix}{result.text}")
             except BiomeError as exc:
-                print(
-                    f"error: batch[{cmd.ordinal}]: {cmd.name}: {exc.message}",
-                    file=sys.stderr,
-                )
+                _err(f"error: batch[{cmd.ordinal}]: {cmd.name}: {exc.message}")
                 any_error = True
 
         return 1 if any_error else 0
