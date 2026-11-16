@@ -1,0 +1,13 @@
+# The facts of follow.logic: host state for follow-loop decisions.
+CONTRACT followLoop.feature
+COVERAGE declared-scope
+MODULE ../../src/biome_mcp/cli/follow.py
+FACT follow.result_status enum=pending,done,complete,finished,error
+FACT follow.max_polls_present bool
+FACT follow.max_polls number min=0 max=10000 integer
+FACT follow.poll number min=0 max=10000 integer
+FACT follow.consecutive_errors number min=0 max=10000 integer
+FACT follow.max_retries number min=0 max=100 integer
+
+INPUT is_done follow.result_status follow.max_polls_present follow.max_polls follow.poll
+INPUT is_fatal follow.consecutive_errors follow.max_retries

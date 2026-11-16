@@ -1,23 +1,13 @@
-# TcpSession reconnect-once strategy.
+# TcpSession connection decision.
+# Host: src/biome_mcp/transport/persistent.py
 
 DECISION is_connected DEFAULT false
-  WHEN reader != null AND writer != null -> true
+  connected AT 10 WHEN tcpSession.reader_present AND tcpSession.writer_present -> true
 END
 
-GIVEN tcpSession
-  WHEN call(payload, timeout)
-    THEN DECISION is_connected -> frame_write(payload) + frame_read(timeout)
-    THEN ON ConnectionError -> reconnect, retry once
-    THEN ON second failure -> raise ConnectionError
-END
-
-GIVEN tcpSession
-  WHEN connect
-    THEN reader, writer = open_connection(host, port)
-    THEN apply_socket_options(writer.socket)
-END
-
-GIVEN tcpSession
-  WHEN close
-    THEN writer.close(), writer = None, reader = None
-END
+# Host mutations (not compiled — reference for Python implementation):
+# GIVEN call(payload, timeout) -> if DECISION is_connected: frame_write + frame_read
+#   ON ConnectionError -> reconnect, retry once
+#   ON second failure  -> raise ConnectionError
+# GIVEN connect -> reader, writer = open_connection(host, port)
+# GIVEN close   -> writer.close(), writer = None, reader = None

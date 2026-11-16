@@ -1,24 +1,17 @@
 # Follow loop decisions.
+# Host: src/biome_mcp/cli/follow.py
 
 DECISION is_done DEFAULT false
-  WHEN result.status IN {"done", "complete", "finished"} -> true
-  WHEN max_polls != null AND poll >= max_polls -> true
+  status AT 10 WHEN follow.result_status IN {"done", "complete", "finished"} -> true
+  polls AT 20 WHEN follow.max_polls_present AND follow.poll >= follow.max_polls -> true
 END
 
 DECISION is_fatal DEFAULT false
-  WHEN consecutive_errors > max_retries -> true
+  errors AT 10 WHEN follow.consecutive_errors > follow.max_retries -> true
 END
 
-GIVEN followLoop
-  WHEN poll_tool
-    THEN poll += 1
-    THEN consecutive_errors = result.error ? consecutive_errors + 1 : 0
-    THEN DECISION is_fatal -> stop(exit=1)
-    THEN DECISION is_done -> stop(exit=0)
-END
-
-GIVEN followLoop
-  WHEN retry
-    THEN sleep(interval)
-    THEN poll_tool
-END
+# Host mutations (not compiled — reference for Python implementation):
+# GIVEN poll_tool -> poll += 1; consecutive_errors = error ? +1 : 0
+#   if DECISION is_fatal -> stop(exit=1)
+#   if DECISION is_done  -> stop(exit=0)
+# GIVEN retry -> sleep(interval), poll_tool

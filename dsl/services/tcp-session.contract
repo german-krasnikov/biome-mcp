@@ -1,0 +1,8 @@
+# The facts of tcp-session.logic: host state for connection decisions.
+CONTRACT tcpSession.feature
+COVERAGE declared-scope
+MODULE ../../src/biome_mcp/transport/persistent.py
+FACT tcpSession.reader_present bool
+FACT tcpSession.writer_present bool
+
+INPUT is_connected tcpSession.reader_present tcpSession.writer_present

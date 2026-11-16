@@ -1,30 +1,20 @@
-# CircuitBreaker state transitions.
+# CircuitBreaker state decisions.
+# Host: src/biome_mcp/circuit_breaker.py
 
 DECISION is_open DEFAULT false
-  WHEN state == "open" -> true
+  open AT 10 WHEN circuitBreaker.state == open -> true
 END
 
 DECISION allow_request DEFAULT false
-  WHEN state == "closed" -> true
-  WHEN state == "open" AND elapsed(opened_at) >= cooldown -> release_probe
+  closed AT 10 WHEN circuitBreaker.state == closed -> true
+  probe AT 20 WHEN circuitBreaker.state == open AND circuitBreaker.cooldown_elapsed -> true
 END
 
 DECISION should_open DEFAULT false
-  WHEN failures >= threshold -> true
+  threshold AT 10 WHEN circuitBreaker.failures >= circuitBreaker.threshold -> true
 END
 
-GIVEN circuitBreaker
-  WHEN record_success
-    THEN state = "closed", failures = 0
-END
-
-GIVEN circuitBreaker
-  WHEN record_failure
-    THEN failures += 1
-    THEN DECISION should_open -> state = "open", opened_at = now()
-END
-
-GIVEN circuitBreaker
-  WHEN reset
-    THEN state = "closed", failures = 0, opened_at = 0.0
-END
+# Host mutations (not compiled — reference for Python implementation):
+# GIVEN record_success  -> state = "closed", failures = 0
+# GIVEN record_failure  -> failures += 1; if DECISION should_open -> state = "open", opened_at = now()
+# GIVEN reset           -> state = "closed", failures = 0, opened_at = 0.0

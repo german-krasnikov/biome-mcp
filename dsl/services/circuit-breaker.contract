@@ -1,0 +1,12 @@
+# The facts of circuit-breaker.logic: host state for circuit breaker decisions.
+CONTRACT circuitBreaker.feature
+COVERAGE declared-scope
+MODULE ../../src/biome_mcp/circuit_breaker.py
+FACT circuitBreaker.state enum=closed,open
+FACT circuitBreaker.failures number min=0 max=999 integer
+FACT circuitBreaker.threshold number min=1 max=100 integer
+FACT circuitBreaker.cooldown_elapsed bool
+
+INPUT is_open circuitBreaker.state
+INPUT allow_request circuitBreaker.state circuitBreaker.cooldown_elapsed
+INPUT should_open circuitBreaker.failures circuitBreaker.threshold
