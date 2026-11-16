@@ -14,11 +14,13 @@ def ports_dir(profile: AppProfile) -> Path:
     return profile.data_dir / "ports"
 
 
-def write_port_file(port: int, pid: int, profile: AppProfile) -> Path:
+def write_port_file(port: int, pid: int, profile: AppProfile,
+                    project_path: str | None = None) -> Path:
     d = ports_dir(profile)
     d.mkdir(parents=True, exist_ok=True)
     p = d / f"{port}.port"
-    p.write_text(str(pid), encoding="utf-8")
+    content = f"{pid}\n{project_path}" if project_path is not None else str(pid)
+    p.write_text(content, encoding="utf-8")
     return p
 
 

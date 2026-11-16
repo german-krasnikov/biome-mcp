@@ -101,16 +101,6 @@ def read_lock_metadata(fd: int) -> dict | None:
         return None
 
 
-def _read_pid_from_fd(fd: int) -> int | None:
-    """Read PID from bytes 0-31. Always readable — outside the locked region."""
-    os.lseek(fd, 0, os.SEEK_SET)
-    data = os.read(fd, 32).decode(errors="ignore").strip()
-    try:
-        return int(data)
-    except ValueError:
-        return None
-
-
 def acquire_lock(lock_dir: Path | str, port: int, metadata: dict | None = None) -> int:
     """Create a per-PID presence file and take exclusive flock on it.
 
@@ -132,9 +122,7 @@ def acquire_lock(lock_dir: Path | str, port: int, metadata: dict | None = None) 
         ) from None
 
     _write_pid(fd)
-    write_lock_metadata(fd, {"ppid": os.getppid()})
-    if metadata is not None:
-        write_lock_metadata(fd, metadata)
+    write_lock_metadata(fd, {"ppid": os.getppid(), **(metadata or {})})
     _lock_paths[fd] = str(lock_file)
     return fd
 
