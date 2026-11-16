@@ -9,7 +9,7 @@ BUILTIN_DESCS: dict[str, str] = {
     "help": "Show this help or help for a command",
     "list": "List available tools",
     "describe": "Show tool schema and parameters",
-    "call": "Call a tool",
+    "call": "Call a tool (shortcut: <tool> [key=value ...])",
     "batch": "Execute batch DSL",
     "serve": "Start MCP stdio server",
 }

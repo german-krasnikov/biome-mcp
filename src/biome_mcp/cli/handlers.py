@@ -46,7 +46,7 @@ def make_help_handler(app_name: str, registry: dict[str, object]) -> _Handler:
                 return 1
             return 0
 
-        print(f"Usage: {app_name} <command> [args]\n")
+        print(f"Usage: {app_name} <command|tool> [args]\n")
         print("Commands:")
         for name, desc in BUILTIN_DESCS.items():
             print(f"  {name:<10} {desc}")

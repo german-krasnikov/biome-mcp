@@ -97,8 +97,6 @@ class BiomeCLI:
             code = self._registry[cmd](rest)
             sys.exit(code)
 
-        print(
-            f"error: unknown command '{cmd}'; run `{self._name} help`",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+        # Implicit call: treat unknown subcommands as tool names
+        code = self._registry["call"]([cmd, *rest])
+        sys.exit(code)

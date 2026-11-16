@@ -1,10 +1,11 @@
-"""S8-S9 help, S27-S31 dispatch and custom subcommands."""
+"""S8-S9 help, S27-S31 dispatch and custom subcommands, S32+ implicit call."""
 from __future__ import annotations
 
 import io
 from contextlib import redirect_stderr, redirect_stdout, suppress
 
 from biome_mcp.cli.app import BiomeCLI
+from biome_mcp.models.result import CommandResult
 from tests.cli.conftest import FakeToolProvider, run_cmd
 
 
@@ -54,10 +55,10 @@ def test_s28_serve_subcommand() -> None:
     assert called == [True]
 
 
-def test_s29_unknown_command_stderr_exit1() -> None:
-    """S29: unknown command → error on stderr, exit 1."""
+def test_s29_unknown_command_stderr_nonzero() -> None:
+    """S29: unknown command (not a tool) → error on stderr, non-zero exit."""
     out, err, code = run_cmd(["unknowncmd"])
-    assert code == 1
+    assert code != 0
     assert "unknowncmd" in err
 
 
@@ -78,6 +79,49 @@ def test_s30_custom_subcommand() -> None:
         cli.dispatch(["custom", "a", "b"])
 
     assert called == [["a", "b"]]
+
+
+def test_s32_implicit_tool_call() -> None:
+    """S32: 'animator action=get' without 'call' → routes to call handler."""
+    results = {"animator": CommandResult.ok("state=idle")}
+    out, err, code = run_cmd(["animator", "action=get"], results=results)
+    assert code == 0
+    assert "state=idle" in out
+
+
+def test_s33_implicit_call_output_passthrough() -> None:
+    """S33: implicit call prints result.text as-is."""
+    results = {"scene_inspect": CommandResult.ok("42 objects")}
+    out, err, code = run_cmd(["scene_inspect", "depth=5"], results=results)
+    assert code == 0
+    assert "42 objects" in out
+
+
+def test_s34_explicit_call_still_works() -> None:
+    """S34: backward compat — 'call animator' still works."""
+    results = {"animator": CommandResult.ok("ok")}
+    out, err, code = run_cmd(["call", "animator"], results=results)
+    assert code == 0
+    assert "ok" in out
+
+
+def test_s35_subcommand_wins_over_tool() -> None:
+    """S35: registered subcommand always wins over tool name."""
+    called: list[bool] = []
+
+    def my_list(argv: list[str]) -> int:
+        called.append(True)
+        return 0
+
+    provider = FakeToolProvider()
+    cli = BiomeCLI(provider, name="test-app")
+    cli.add("list", my_list)
+
+    out, err = io.StringIO(), io.StringIO()
+    with redirect_stdout(out), redirect_stderr(err), suppress(SystemExit):
+        cli.dispatch(["list"])
+
+    assert called == [True]
 
 
 def test_s31_override_builtin() -> None:
