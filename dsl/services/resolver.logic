@@ -1,0 +1,14 @@
+# ConnectionResolver priority chain: flag → env → config → port_file → lock → default.
+# Host: src/biome_mcp/cli/resolver.py
+
+DECISION connection_source DEFAULT default
+  flag AT 10 WHEN resolver.cli_port_present -> flag
+  env AT 20 WHEN resolver.env_port_present -> env
+  config AT 30 WHEN resolver.config_port_present -> config
+  port_file AT 40 WHEN resolver.port_file_available -> port_file
+  lock AT 50 WHEN resolver.lock_available -> lock
+END
+
+# Host behavior (not compiled):
+# port_file resolution: if project_path given, prefer longest-matching prefix
+# among alive port files. Fall back to first alive candidate.

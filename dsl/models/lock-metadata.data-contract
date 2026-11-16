@@ -1,0 +1,5 @@
+DSL 1
+
+RECORD LockMetadata
+  ppid: number
+END

@@ -1,0 +1,15 @@
+DSL 1
+
+RECORD AppProfile
+  app_name: text
+  protocol: text = "tcp"
+  default_port: number = 0
+  default_host: text = "localhost"
+  data_dir: text = ""
+  env_aliases: list<EnvAlias> = []
+END
+
+RECORD EnvAlias
+  var_name: text
+  suffix: text
+END

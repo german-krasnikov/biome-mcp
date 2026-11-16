@@ -1,0 +1,11 @@
+# The facts of resolver.logic: host state for connection resolution decisions.
+CONTRACT connectionResolver.feature
+COVERAGE declared-scope
+MODULE ../../src/biome_mcp/cli/resolver.py
+FACT resolver.cli_port_present bool
+FACT resolver.env_port_present bool
+FACT resolver.config_port_present bool
+FACT resolver.port_file_available bool
+FACT resolver.lock_available bool
+
+INPUT connection_source resolver.cli_port_present resolver.env_port_present resolver.config_port_present resolver.port_file_available resolver.lock_available

@@ -6,6 +6,7 @@ FEATURE tcpSession USES service
   STATE writer : any? = None
   FACT host : text
   FACT port : number
+  FACT on_connect : any? = None
 
   ACTION connect
   ACTION close
