@@ -1,0 +1,8 @@
+# Public API of biome_mcp.lockfile — re-exported by consumer bridges.
+MODULE biome_mcp.lockfile
+BRIDGE unity_mcp.bridge.lockfile
+EXPORT acquire_lock
+EXPORT release_lock
+EXPORT write_lock_metadata
+EXPORT read_lock_metadata
+EXPORT is_pid_alive
