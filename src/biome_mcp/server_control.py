@@ -14,29 +14,11 @@ import sys
 import time
 from pathlib import Path
 
+from .lockfile import is_pid_alive
+
 log = logging.getLogger("biome_mcp.server_control")
 
 _IS_WIN = sys.platform == "win32"
-
-
-def is_pid_alive(pid: int | None) -> bool:
-    """Return True if the process with given PID exists."""
-    if pid is None:
-        return False
-    if sys.platform == "win32":
-        import ctypes
-        handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, pid)
-        if handle:
-            ctypes.windll.kernel32.CloseHandle(handle)
-            return True
-        return False
-    try:
-        os.kill(pid, 0)
-        return True
-    except PermissionError:
-        return True  # alive but no permission (cross-user on Unix)
-    except (OSError, ProcessLookupError):
-        return False
 
 
 def _read_ppid_from_lock_path(lock_path: Path) -> int | None:
