@@ -27,7 +27,7 @@ def remove_port_file(port: int, profile: AppProfile) -> None:
     p.unlink(missing_ok=True)
 
 
-def iter_port_files(profile: AppProfile) -> Iterator[tuple[int, int | None]]:
+def iter_port_files(profile: AppProfile) -> Iterator[tuple[int, int | None, str | None]]:
     d = ports_dir(profile)
     if not d.exists():
         return
@@ -37,6 +37,10 @@ def iter_port_files(profile: AppProfile) -> Iterator[tuple[int, int | None]]:
         except ValueError:
             continue
         pid = None
+        project_path = None
         with contextlib.suppress(OSError, ValueError):
-            pid = int(f.read_text(encoding="utf-8").split("\n")[0].strip())
-        yield port_val, pid
+            lines = f.read_text(encoding="utf-8").split("\n")
+            pid = int(lines[0].strip())
+            if len(lines) > 1 and lines[1].strip():
+                project_path = lines[1].strip()
+        yield port_val, pid, project_path

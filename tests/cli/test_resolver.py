@@ -133,3 +133,66 @@ def test_alias_env_var_in_resolver(tmp_path: Path, monkeypatch: object) -> None:
     spec = ConnectionResolver(profile).resolve()
     assert spec.port == 7777
     assert spec.source == "env"
+
+
+# ---------------------------------------------------------------------------
+# project_path matching
+# ---------------------------------------------------------------------------
+
+def _write_port_with_path(profile: AppProfile, port: int, pid: int, project_path: str) -> None:
+    d = profile.data_dir / "ports"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{port}.port").write_text(f"{pid}\n{project_path}\n", encoding="utf-8")
+
+
+def test_project_path_prefers_matching_port_file(tmp_path: Path, monkeypatch: object) -> None:
+    """project_path match wins over alphabetical-first port file."""
+    profile = _profile(tmp_path)
+    _write_port_with_path(profile, 9000, 100, str(tmp_path / "ProjectA"))
+    _write_port_with_path(profile, 9001, 200, str(tmp_path / "ProjectB"))
+    monkeypatch.setattr("biome_mcp.cli.resolver.is_pid_alive", lambda pid: True)  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve(project_path=str(tmp_path / "ProjectB" / "Assets"))
+    assert spec.port == 9001
+    assert spec.source == "port_file"
+
+
+def test_project_path_no_match_falls_back_to_first_alive(tmp_path: Path, monkeypatch: object) -> None:
+    """No project_path match → first alphabetically alive port file wins."""
+    profile = _profile(tmp_path)
+    _write_port_with_path(profile, 9000, 100, str(tmp_path / "ProjectA"))
+    _write_port_with_path(profile, 9001, 200, str(tmp_path / "ProjectB"))
+    monkeypatch.setattr("biome_mcp.cli.resolver.is_pid_alive", lambda pid: True)  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve(project_path=str(tmp_path / "Unrelated"))
+    assert spec.port == 9000  # first alphabetically
+
+
+def test_project_path_exact_match(tmp_path: Path, monkeypatch: object) -> None:
+    """Exact project root (not subdir) also matches."""
+    profile = _profile(tmp_path)
+    _write_port_with_path(profile, 9000, 100, str(tmp_path / "ProjectA"))
+    _write_port_with_path(profile, 9001, 200, str(tmp_path / "ProjectB"))
+    monkeypatch.setattr("biome_mcp.cli.resolver.is_pid_alive", lambda pid: True)  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve(project_path=str(tmp_path / "ProjectA"))
+    assert spec.port == 9000
+
+
+def test_project_path_longest_prefix_wins(tmp_path: Path, monkeypatch: object) -> None:
+    """Two overlapping project paths → longer (more specific) prefix wins."""
+    profile = _profile(tmp_path)
+    root = str(tmp_path / "Workspace")
+    sub = str(tmp_path / "Workspace" / "SubProject")
+    _write_port_with_path(profile, 9000, 100, root)
+    _write_port_with_path(profile, 9001, 200, sub)
+    monkeypatch.setattr("biome_mcp.cli.resolver.is_pid_alive", lambda pid: True)  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve(project_path=sub + "/Assets")
+    assert spec.port == 9001  # sub-project (longer path) wins
+
+
+def test_project_path_none_unchanged_behavior(tmp_path: Path, monkeypatch: object) -> None:
+    """project_path=None uses original behavior (first alive port file)."""
+    profile = _profile(tmp_path)
+    _write_port_with_path(profile, 9000, 100, str(tmp_path / "ProjectA"))
+    _write_port_with_path(profile, 9001, 200, str(tmp_path / "ProjectB"))
+    monkeypatch.setattr("biome_mcp.cli.resolver.is_pid_alive", lambda pid: True)  # type: ignore[attr-defined]
+    spec = ConnectionResolver(profile).resolve()
+    assert spec.port == 9000  # first alive

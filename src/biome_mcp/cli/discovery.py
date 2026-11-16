@@ -27,7 +27,7 @@ def discover_instances(profile: AppProfile) -> list[ConnectionSpec]:
             label=f"pid={entry['pid']}",
         )
 
-    for port, pid in iter_port_files(profile):
+    for port, pid, _pp in iter_port_files(profile):
         if port in seen:
             continue
         if pid is not None and not is_pid_alive(pid):

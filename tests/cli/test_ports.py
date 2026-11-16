@@ -32,7 +32,7 @@ def test_s14_iter_port_files(tmp_path: Path) -> None:
     write_port_file(6401, 200, profile)
 
     result = list(iter_port_files(profile))
-    assert result == [(6400, 100), (6401, 200)]
+    assert result == [(6400, 100, None), (6401, 200, None)]
 
 
 def test_s14_iter_empty(tmp_path: Path) -> None:
@@ -46,7 +46,7 @@ def test_s14_iter_bad_pid(tmp_path: Path) -> None:
     d.mkdir()
     (d / "6400.port").write_text("not_a_pid", encoding="utf-8")
     result = list(iter_port_files(profile))
-    assert result == [(6400, None)]
+    assert result == [(6400, None, None)]
 
 
 def test_s14_iter_ignores_non_numeric_stem(tmp_path: Path) -> None:
@@ -55,3 +55,21 @@ def test_s14_iter_ignores_non_numeric_stem(tmp_path: Path) -> None:
     d.mkdir()
     (d / "foo.port").write_text("123", encoding="utf-8")
     assert list(iter_port_files(profile)) == []
+
+
+def test_s14_iter_includes_project_path(tmp_path: Path) -> None:
+    profile = _profile(tmp_path)
+    d = tmp_path / "ports"
+    d.mkdir()
+    (d / "6400.port").write_text("100\n/my/project\n", encoding="utf-8")
+    result = list(iter_port_files(profile))
+    assert result == [(6400, 100, "/my/project")]
+
+
+def test_s14_iter_blank_project_path_is_none(tmp_path: Path) -> None:
+    profile = _profile(tmp_path)
+    d = tmp_path / "ports"
+    d.mkdir()
+    (d / "6400.port").write_text("100\n\n", encoding="utf-8")
+    result = list(iter_port_files(profile))
+    assert result == [(6400, 100, None)]
