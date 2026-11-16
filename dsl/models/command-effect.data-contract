@@ -1,7 +1,2 @@
 DSL 1
-
-ENUM CommandEffect
-  READ
-  WRITE
-  IDEMPOTENT_WRITE
-END
+ENUM CommandEffect read|write|idempotent_write

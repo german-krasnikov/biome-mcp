@@ -1,5 +1,4 @@
 DSL 1
-
 RECORD LockMetadata
-  ppid: number
+  ppid: int
 END

@@ -1,9 +1,8 @@
 DSL 1
-
 RECORD ToolInfo KEY name
-  name: text
-  description: text
-  input_schema: dict
-  effect: text?
-  namespace: text?
+  name: string
+  description: string
+  input_schema: any
+  effect: string NULLABLE
+  namespace: string NULLABLE
 END

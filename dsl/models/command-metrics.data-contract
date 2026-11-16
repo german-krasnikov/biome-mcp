@@ -1,8 +1,7 @@
 DSL 1
-
 RECORD CommandMetrics
-  invocations: number = 0
-  errors: number = 0
-  total_duration_s: number = 0.0
-  last_duration_s: number = 0.0
+  invocations: number
+  errors: number
+  total_duration_s: number
+  last_duration_s: number
 END

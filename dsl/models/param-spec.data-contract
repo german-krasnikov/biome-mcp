@@ -1,9 +1,8 @@
 DSL 1
-
 RECORD ParamSpec KEY name
-  name: text
-  param_type: type
+  name: string
+  param_type: string
   required: bool
-  default: any = None
-  description: text
+  default: any NULLABLE
+  description: string
 END

@@ -1,10 +1,9 @@
 DSL 1
-
 RECORD ConnectionSpec
-  host: text
+  host: string
   port: number
-  protocol: text
-  app_name: text
-  source: text
-  label: text? = None
+  protocol: string
+  app_name: string
+  source: string
+  label: string NULLABLE
 END

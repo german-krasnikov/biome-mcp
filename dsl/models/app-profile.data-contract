@@ -1,15 +1,15 @@
 DSL 1
-
-RECORD AppProfile
-  app_name: text
-  protocol: text = "tcp"
-  default_port: number = 0
-  default_host: text = "localhost"
-  data_dir: text = ""
-  env_aliases: list<EnvAlias> = []
+# env_aliases: list of EnvAlias records — expressed as [EnvAlias] in the AppProfile below.
+RECORD EnvAlias
+  var_name: string
+  suffix: string
 END
 
-RECORD EnvAlias
-  var_name: text
-  suffix: text
+RECORD AppProfile
+  app_name: string
+  protocol: string
+  default_port: int
+  default_host: string
+  data_dir: string
+  env_aliases: [EnvAlias]
 END

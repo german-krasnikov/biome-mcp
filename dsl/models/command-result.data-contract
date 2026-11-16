@@ -1,9 +1,10 @@
 DSL 1
+ENUM CommandStatus ok|invalid_args|failed|cancelled|timed_out|unknown
 
 RECORD CommandResult
   status: CommandStatus
-  text: text
-  data: any = None
-  complete: bool = true
-  error_code: text? = None
+  text: string
+  data: any NULLABLE
+  complete: bool
+  error_code: string NULLABLE
 END

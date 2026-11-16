@@ -1,10 +1,2 @@
 DSL 1
-
-ENUM CommandStatus
-  OK
-  INVALID_ARGS
-  FAILED
-  CANCELLED
-  TIMED_OUT
-  UNKNOWN
-END
+ENUM CommandStatus ok|invalid_args|failed|cancelled|timed_out|unknown

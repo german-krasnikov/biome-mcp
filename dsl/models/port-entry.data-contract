@@ -1,7 +1,6 @@
 DSL 1
-
 RECORD PortEntry
-  port: number
-  pid: number? = None
-  project_path: text? = None
+  port: int
+  pid: int NULLABLE
+  project_path: string NULLABLE
 END

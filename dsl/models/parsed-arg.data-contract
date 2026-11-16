@@ -1,8 +1,9 @@
 DSL 1
+ENUM LexicalKind bare|quoted|boolean|null|number|json_literal
 
 RECORD ParsedArg KEY key
-  key: text
+  key: string
   kind: LexicalKind
-  raw: text
+  raw: string
   value: any
 END

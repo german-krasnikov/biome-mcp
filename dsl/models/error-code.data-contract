@@ -1,12 +1,2 @@
 DSL 1
-
-ENUM ErrorCode
-  CONNECTION_LOST
-  COMMAND_NOT_FOUND
-  INVALID_ARGUMENTS
-  TIMEOUT
-  PERMISSION_DENIED
-  INTERNAL_ERROR
-  CANCELLED
-  UNKNOWN
-END
+ENUM ErrorCode connection_lost|command_not_found|invalid_arguments|timeout|permission_denied|internal_error|cancelled|unknown

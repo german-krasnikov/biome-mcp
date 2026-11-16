@@ -1,10 +1,2 @@
 DSL 1
-
-ENUM LexicalKind
-  BARE
-  QUOTED
-  BOOLEAN
-  NULL
-  NUMBER
-  JSON_LITERAL
-END
+ENUM LexicalKind bare|quoted|boolean|null|number|json_literal
