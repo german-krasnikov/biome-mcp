@@ -38,5 +38,5 @@ def iter_port_files(profile: AppProfile) -> Iterator[tuple[int, int | None]]:
             continue
         pid = None
         with contextlib.suppress(OSError, ValueError):
-            pid = int(f.read_text(encoding="utf-8").strip())
+            pid = int(f.read_text(encoding="utf-8").split("\n")[0].strip())
         yield port_val, pid
