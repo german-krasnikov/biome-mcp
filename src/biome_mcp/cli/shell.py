@@ -34,7 +34,10 @@ def run_shell(cli: BiomeCLI) -> int:
 
     completer = ShellCompleter(cli)
     readline.set_completer(completer.complete)
-    readline.parse_and_bind("tab: complete")
+    if getattr(readline, "backend", "") == "editline":
+        readline.parse_and_bind("bind ^I rl_complete")
+    else:
+        readline.parse_and_bind("tab: complete")
 
     prompt = f"{cli._name}> "
     print("Interactive shell. Type 'help' for commands, Ctrl-D to exit.")
