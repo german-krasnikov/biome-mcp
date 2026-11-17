@@ -5,10 +5,9 @@ import argparse
 import json
 import sys
 from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from biome_mcp.errors import BiomeError
+from biome_mcp.errors import BiomeError, ErrorCode
 
 from ._constants import BUILTIN_DESCS, BUILTIN_USAGE, TOOL_HINT_THRESHOLD
 from .formatters import (
@@ -149,23 +148,48 @@ def make_call_handler(
         p = argparse.ArgumentParser(add_help=False)
         p.add_argument("--follow", default=None)
         p.add_argument("--max-polls", type=int, default=None, dest="max_polls")
+        p.add_argument("--dry-run", action="store_true", dest="dry_run")
         known, rest = p.parse_known_args(argv)
 
         if known.follow is not None:
-            return _run_follow(provider, rest, known.follow, known.max_polls, spec, follow)
+            from .follow_handler import run_follow
+            return run_follow(provider, rest, known.follow, known.max_polls, spec, follow)
 
         if not rest:
             _err("error: call requires a tool name")
             return 3
         name, *kv = rest
 
+        from .formatters import generate_example, suggest_tool, validate_required
         from .generic import exit_code_for, parse_kv
+
+        info = provider.get_tool(name)
+        if info is None:
+            hint = suggest_tool(name, provider)
+            if hint:
+                _err(f"error: tool '{name}' not found. Did you mean: {hint}")
+            else:
+                _err(f"error: tool '{name}' not found")
+            return exit_code_for(BiomeError(ErrorCode.COMMAND_NOT_FOUND, name))
 
         try:
             args = parse_kv(kv)
         except ValueError as exc:
             _err(f"error: {exc}")
             return 3
+
+        missing = validate_required(info, args)
+        if missing:
+            example = generate_example(info)
+            _err(f"error: missing required: {', '.join(missing)}")
+            if example:
+                _err(f"  example: {example}")
+            return 3
+
+        if known.dry_run:
+            print(f"[dry-run] {name} {args}")
+            return 0
+
         try:
             result = provider.call_tool_sync(name, args)
         except BiomeError as exc:
@@ -179,97 +203,6 @@ def make_call_handler(
     return handler
 
 
-def _run_follow(
-    provider: ToolProvider,
-    argv: list[str],
-    follow_str: str,
-    max_polls: int | None,
-    spec: ConnectionSpec | None,
-    follow: FollowPolicy | None,
-) -> int:
-    import asyncio
-
-    from biome_mcp.cli.follow import follow_loop, parse_interval
-    from biome_mcp.cli.follow_policy import FollowPolicy as _FP
-
-    try:
-        interval = parse_interval(follow_str)
-    except ValueError as exc:
-        _err(f"error: --follow: {exc}")
-        return 3
-
-    if not argv:
-        _err("error: call requires a tool name")
-        return 3
-
-    name, *rest = argv
-    from .generic import parse_kv
-
-    try:
-        args = parse_kv(rest)
-    except ValueError as exc:
-        _err(f"error: {exc}")
-        return 3
-
-    if not hasattr(provider, "call_tool_async"):
-        _err("error: provider does not support --follow")
-        return 1
-
-    policy = follow if follow is not None else _FP()
-
-    if spec is not None and spec.protocol == "tcp":
-        from biome_mcp.transport.persistent import TcpSession
-
-        async def _with_session() -> int:
-            async with TcpSession(spec.host, spec.port):
-                return await follow_loop(
-                    provider.call_tool_async, name, args, interval, max_polls, policy
-                )
-
-        return asyncio.run(_with_session())
-
-    return asyncio.run(
-        follow_loop(provider.call_tool_async, name, args, interval, max_polls, policy)
-    )
-
-
 def make_batch_handler(provider: ToolProvider) -> _Handler:
-    def handler(argv: list[str]) -> int:
-        from biome_mcp.batch.parser import parse_batch
-
-        from .generic import exit_code_for
-
-        p = argparse.ArgumentParser(prog="batch", add_help=False)
-        p.add_argument("dsl", nargs="?", default="")
-        p.add_argument("--file", default=None)
-        args = p.parse_args(argv)
-
-        dsl = args.dsl
-        if args.file:
-            try:
-                dsl = Path(args.file).read_text(encoding="utf-8")
-            except OSError as exc:
-                _err(f"error: {exc}")
-                return 1
-
-        try:
-            doc = parse_batch(dsl)
-        except BiomeError as exc:
-            _err(f"error: batch: {exc.message}")
-            return exit_code_for(exc)
-
-        any_error = False
-        multi = len(doc.commands) > 1
-        for cmd in doc.commands:
-            cmd_args = {a.key: a.value for a in cmd.args}
-            try:
-                result = provider.call_tool_sync(cmd.name, cmd_args)
-                prefix = f"{cmd.name}: " if multi else ""
-                print(f"{prefix}{result.text}")
-            except BiomeError as exc:
-                _err(f"error: batch[{cmd.ordinal}]: {cmd.name}: {exc.message}")
-                any_error = True
-
-        return 1 if any_error else 0
-
-    return handler
+    from .batch_handler import make_batch_handler as _make
+    return _make(provider)

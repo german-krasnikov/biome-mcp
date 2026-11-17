@@ -84,7 +84,7 @@ def test_s30_custom_subcommand() -> None:
 def test_s32_implicit_tool_call() -> None:
     """S32: 'animator action=get' without 'call' → routes to call handler."""
     results = {"animator": CommandResult.ok("state=idle")}
-    out, err, code = run_cmd(["animator", "action=get"], results=results)
+    out, err, code = run_cmd(["animator", "action=get", "path=/Player"], results=results)
     assert code == 0
     assert "state=idle" in out
 
@@ -98,9 +98,9 @@ def test_s33_implicit_call_output_passthrough() -> None:
 
 
 def test_s34_explicit_call_still_works() -> None:
-    """S34: backward compat — 'call animator' still works."""
+    """S34: backward compat — 'call animator action=get path=/P' still works."""
     results = {"animator": CommandResult.ok("ok")}
-    out, err, code = run_cmd(["call", "animator"], results=results)
+    out, err, code = run_cmd(["call", "animator", "action=get", "path=/P"], results=results)
     assert code == 0
     assert "ok" in out
 

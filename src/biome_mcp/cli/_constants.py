@@ -11,14 +11,16 @@ BUILTIN_DESCS: dict[str, str] = {
     "describe": "Show tool schema and parameters",
     "call": "Call a tool (shortcut: <tool> [key=value ...])",
     "batch": "Execute batch DSL",
+    "shell": "Interactive REPL with tab-completion",
     "serve": "Start MCP stdio server",
 }
 
 BUILTIN_USAGE: dict[str, str] = {
     "list": "list [--ns NS] [--effect read|write] [--grep TEXT] [--json] [--flat]",
     "describe": "describe <tool> [--json]",
-    "call": "call <tool> [key=value ...] [--follow INTERVAL] [--max-polls N]",
-    "batch": 'batch "<dsl>" | --file FILE',
+    "call": "call <tool> [key=value ...] [--follow INTERVAL] [--max-polls N] [--dry-run]",
+    "batch": 'batch "<dsl>" | --file FILE | --stdin',
+    "shell": "shell",
     "serve": "serve",
     "help": "help [subcommand]",
 }

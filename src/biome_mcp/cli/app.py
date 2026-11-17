@@ -3,7 +3,15 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, NoReturn, NotRequired, Protocol, TypedDict, runtime_checkable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    NoReturn,
+    NotRequired,
+    Protocol,
+    TypedDict,
+    runtime_checkable,
+)
 
 if TYPE_CHECKING:
     from biome_mcp.cli.connection import ConnectionSpec
@@ -63,40 +71,69 @@ class BiomeCLI:
             self._provider, spec=self._spec, follow=self._follow
         )
         self._registry["batch"] = make_batch_handler(self._provider)
+        self._registry["shell"] = self._make_shell_handler()
         # help is registered last so it sees the full registry
         self._registry["help"] = make_help_handler(self._name, self._registry)
+
+    def _make_shell_handler(self) -> Callable[[list[str]], int]:
+        cli = self
+        def handler(argv: list[str]) -> int:
+            from biome_mcp.cli.shell import run_shell
+            return run_shell(cli)
+        return handler
+
+    @property
+    def provider(self) -> ToolProvider:
+        return self._provider
+
+    @property
+    def registry(self) -> dict[str, Callable[[list[str]], int]]:
+        return self._registry
 
     def add(self, name: str, handler: Callable[[list[str]], int]) -> None:
         """Register (or override) a subcommand."""
         self._registry[name] = handler
 
-    def dispatch(self, argv: list[str] | None = None) -> NoReturn:
-        if argv is None:
-            argv = sys.argv[1:]
-
+    def dispatch_one(self, argv: list[str]) -> int:
+        """Route a single command, return exit code (no sys.exit)."""
         if not argv:
             if self._serve:
                 self._serve()
-                sys.exit(0)
+                return 0
             self._registry["help"]([])
-            sys.exit(0)
+            return 0
 
         cmd, *rest = argv
 
         if cmd == "serve":
             if self._serve:
                 self._serve()
-                sys.exit(0)
+                return 0
             print(
                 f"error: no serve callback; run `{self._name} help`",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            return 1
 
         if cmd in self._registry:
-            code = self._registry[cmd](rest)
-            sys.exit(code)
+            return self._registry[cmd](rest)
+
+        # --help on any token → describe that tool
+        if "--help" in rest or "-h" in rest:
+            stripped = [a for a in rest if a not in ("--help", "-h")]
+            return self._registry["describe"]([cmd, *stripped])
+
+        # Namespace prefix: `cli scene` → list scene.* tools
+        from biome_mcp.cli.formatters import tools_by_ns_prefix
+        if not rest and self._provider.get_tool(cmd) is None:
+            ns_tools = tools_by_ns_prefix(cmd, self._provider)
+            if len(ns_tools) >= 2:
+                return self._registry["list"](["--ns", cmd])
 
         # Implicit call: treat unknown subcommands as tool names
-        code = self._registry["call"]([cmd, *rest])
-        sys.exit(code)
+        return self._registry["call"]([cmd, *rest])
+
+    def dispatch(self, argv: list[str] | None = None) -> NoReturn:
+        if argv is None:
+            argv = sys.argv[1:]
+        sys.exit(self.dispatch_one(argv))

@@ -22,6 +22,8 @@ class FakeToolProvider:
         return []
 
     def get_tool(self, name: str):
+        if name in self._results:
+            return {"name": name, "description": "", "input_schema": {}}
         return None
 
     def call_tool_sync(self, name: str, args: dict) -> CommandResult:

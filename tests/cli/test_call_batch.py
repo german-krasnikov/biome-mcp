@@ -1,6 +1,9 @@
 """S22-S26: call, batch handlers and exit codes."""
 from __future__ import annotations
 
+import io
+from unittest.mock import patch
+
 from biome_mcp.cli.generic import exit_code_for
 from biome_mcp.errors import BiomeError, ErrorCode
 from biome_mcp.models.result import CommandResult, CommandStatus
@@ -21,7 +24,9 @@ def test_s22_call_passes_kv_to_provider() -> None:
 def test_s23_call_output_passthrough() -> None:
     """S23: result.text printed as-is."""
     results = {"animator": CommandResult.ok("raw output here")}
-    out, err, code = run_cmd(["call", "animator"], results=results)
+    out, err, code = run_cmd(
+        ["call", "animator", "action=get", "path=/Player"], results=results,
+    )
     assert code == 0
     assert "raw output here" in out
 
@@ -29,7 +34,10 @@ def test_s23_call_output_passthrough() -> None:
 def test_s23_call_truncation_note() -> None:
     """S23: append truncation note when result.complete is False."""
     result = CommandResult(status=CommandStatus.OK, text="partial text", complete=False)
-    out, err, code = run_cmd(["call", "animator"], results={"animator": result})
+    out, err, code = run_cmd(
+        ["call", "animator", "action=get", "path=/Player"],
+        results={"animator": result},
+    )
     assert "truncated" in out.lower()
 
 
@@ -59,6 +67,15 @@ def test_s25_batch_unknown_tool_nonzero() -> None:
     """S25: batch with unknown tool → non-zero exit."""
     out, err, code = run_cmd(["batch", "totally_unknown_tool"])
     assert code != 0
+
+
+def test_batch_stdin() -> None:
+    """batch --stdin reads DSL from stdin."""
+    results = {"scene_inspect": CommandResult.ok("42")}
+    with patch("sys.stdin", io.StringIO("scene_inspect")):
+        out, err, code = run_cmd(["batch", "--stdin"], results=results)
+    assert code == 0
+    assert "42" in out
 
 
 # --- Exit codes S26 ---
